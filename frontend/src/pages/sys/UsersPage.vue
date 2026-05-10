@@ -222,8 +222,12 @@ const stats = computed(() => {
         <strong class="users-page__name">{{ row.real_name }}</strong>
       </template>
       <template #cell-department_id="{ row }">
-        <span class="users-page__dept">
+        <span
+          class="users-page__dept"
+          :class="{ 'users-page__dept--unassigned': Number(row.department_id) === 1 }"
+        >
           <AppIcon
+            v-if="Number(row.department_id) !== 1"
             name="graduation-cap"
             :size="13"
           />
@@ -260,14 +264,31 @@ const stats = computed(() => {
             :disabled="page <= 1 || loading"
             @click="page = page - 1; load()"
             aria-label="上一页"
-          >‹ 上一页</button>
+          >
+            <AppIcon
+              name="arrow-right"
+              :size="12"
+              class="users-page__pager-icon users-page__pager-icon--prev"
+            />
+            上一页
+          </button>
+          <span class="users-page__pager-num">
+            {{ page }} / {{ Math.max(1, Math.ceil(data.total / size)) }}
+          </span>
           <button
             type="button"
             class="users-page__pager-btn"
             :disabled="page * size >= data.total || loading"
             @click="page = page + 1; load()"
             aria-label="下一页"
-          >下一页 ›</button>
+          >
+            下一页
+            <AppIcon
+              name="arrow-right"
+              :size="12"
+              class="users-page__pager-icon"
+            />
+          </button>
         </span>
         <span class="users-page__footer-hint">
           <AppIcon
@@ -484,6 +505,12 @@ const stats = computed(() => {
   color: var(--color-text-secondary);
 }
 
+.users-page__dept--unassigned {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+  font-size: var(--font-size-xs);
+}
+
 .users-page__footer-hint {
   display: inline-flex;
   align-items: center;
@@ -501,8 +528,26 @@ const stats = computed(() => {
 
 .users-page__pager {
   display: inline-flex;
-  gap: 4px;
+  align-items: center;
+  gap: 6px;
   margin: 0 auto;
+}
+
+.users-page__pager-num {
+  font-family: var(--font-family-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  padding: 0 8px;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.users-page__pager-icon {
+  flex-shrink: 0;
+}
+
+.users-page__pager-icon--prev {
+  transform: scaleX(-1);
 }
 
 .users-page__pager-btn {

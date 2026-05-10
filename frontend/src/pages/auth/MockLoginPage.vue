@@ -401,13 +401,14 @@ async function submit(): Promise<void> {
 .mock-login__divider {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   color: var(--color-text-tertiary);
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.16em;
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   font-weight: var(--font-weight-semibold);
-  margin: var(--space-3) 0;
+  margin: var(--space-2) 0 var(--space-3);
+  opacity: 0.7;
 }
 
 .mock-login__divider::before,

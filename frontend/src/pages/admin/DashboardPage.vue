@@ -107,15 +107,8 @@ const FLOW: readonly FlowStep[] = [
             审核工作流 · 闭环
           </span>
             <h2 class="admin-dash__hero-title">
-              <span class="admin-dash__hero-step">上报</span>
-              <span class="admin-dash__hero-sep">·</span>
-              <span class="admin-dash__hero-step">初审</span>
-              <span class="admin-dash__hero-sep">·</span>
-              <span class="admin-dash__hero-step">复核</span>
-              <span class="admin-dash__hero-sep">·</span>
-              <span class="admin-dash__hero-step admin-dash__hero-em">处置</span>
-              <span class="admin-dash__hero-sep">·</span>
-              <span class="admin-dash__hero-step">闭环</span>
+              事件全程可追溯，<br>
+              <span class="admin-dash__hero-em">守住校园安全防线</span>
             </h2>
           <p class="admin-dash__hero-lead">
             状态机由地基组的 service 层守护：所有状态变更必须在<strong>同一事务</strong>内完成，
@@ -176,10 +169,6 @@ const FLOW: readonly FlowStep[] = [
           </ol>
         </div>
       </div>
-      <span
-        class="admin-dash__hero-watermark"
-        aria-hidden="true"
-      >审核 · 2026</span>
     </AppCard>
 
     <!-- 待办计数 -->
@@ -199,7 +188,7 @@ const FLOW: readonly FlowStep[] = [
     <!-- 双栏占位 -->
     <section class="admin-dash__grid">
       <AppCard
-        padding="lg"
+        padding="md"
         :corner="true"
       >
         <template #header>
@@ -213,15 +202,17 @@ const FLOW: readonly FlowStep[] = [
           <span class="admin-dash__placeholder-icon">
             <AppIcon
               name="clipboard-list"
-              :size="28"
+              :size="20"
             />
           </span>
-          <p>分配给当前审核员的事件队列</p>
-          <small>支持初审、复核、处置流程；按状态、风险等级、时效自动排序</small>
+          <div class="admin-dash__placeholder-text">
+            <p>分配给当前审核员的事件队列</p>
+            <small>支持初审、复核、处置流程；按状态、风险等级、时效自动排序</small>
+          </div>
         </div>
       </AppCard>
 
-      <AppCard padding="lg">
+      <AppCard padding="md">
         <template #header>
           <div>
             <h3>本周指标</h3>
@@ -236,11 +227,13 @@ const FLOW: readonly FlowStep[] = [
           >
             <AppIcon
               name="activity"
-              :size="28"
+              :size="20"
             />
           </span>
-          <p>处置时长 · 复核率 · 误判率等审核 KPI</p>
-          <small>含同期对比、部门排名、首响时长热力图</small>
+          <div class="admin-dash__placeholder-text">
+            <p>处置时长 · 复核率 · 误判率等审核 KPI</p>
+            <small>含同期对比、部门排名、首响时长热力图</small>
+          </div>
         </div>
       </AppCard>
     </section>
@@ -513,13 +506,19 @@ const FLOW: readonly FlowStep[] = [
 }
 
 .admin-dash__placeholder {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  color: var(--color-text-secondary);
+}
+
+.admin-dash__placeholder-text {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: var(--space-2);
-  padding: var(--space-7) var(--space-5);
-  color: var(--color-text-secondary);
+  gap: 2px;
+  min-width: 0;
 }
 
 .admin-dash__placeholder p {
@@ -532,14 +531,13 @@ const FLOW: readonly FlowStep[] = [
 .admin-dash__placeholder small {
   font-size: var(--font-size-xs);
   opacity: 0.85;
-  max-width: 320px;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 .admin-dash__placeholder-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-lg);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
   background: var(--color-brand-50);
   color: var(--color-brand-600);
   display: inline-flex;
@@ -547,6 +545,7 @@ const FLOW: readonly FlowStep[] = [
   justify-content: center;
   border: 1px solid rgb(134 38 51 / 12%);
   box-shadow: var(--shadow-low);
+  flex-shrink: 0;
 }
 
 .admin-dash__placeholder-icon[data-tone="info"] {

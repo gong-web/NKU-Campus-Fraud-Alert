@@ -55,7 +55,7 @@ const sparkPath = computed<string>(() => {
 <template>
   <article
     class="stat-card"
-    :class="`stat-card--${tone}`"
+    :class="[`stat-card--${tone}`, { 'stat-card--is-placeholder': isPlaceholder }]"
   >
     <div class="stat-card__top">
       <span class="stat-card__label">{{ label }}</span>
@@ -190,6 +190,15 @@ const sparkPath = computed<string>(() => {
 .stat-card--warning::after { background: var(--color-warning); }
 .stat-card--danger::after { background: var(--color-danger); }
 .stat-card--neutral::after { background: var(--color-neutral-400); }
+
+.stat-card--is-placeholder::before {
+  background: var(--color-neutral-300);
+  opacity: 0.55;
+}
+
+.stat-card--is-placeholder::after {
+  display: none;
+}
 
 .stat-card__top {
   display: flex;

@@ -220,13 +220,14 @@ const features: { icon: string; title: string; desc: string }[] = [
 
 .auth-layout__art-motto {
   position: absolute;
-  right: -2vw;
-  bottom: 6vh;
+  right: clamp(16px, 4%, 64px);
+  top: 50%;
+  transform: translateY(-50%);
   font-family: var(--font-family-serif);
-  font-size: clamp(80px, 11vw, 160px);
+  font-size: clamp(64px, 8vw, 128px);
   font-weight: 700;
-  line-height: 0.95;
-  letter-spacing: 0.08em;
+  line-height: 1;
+  letter-spacing: 0.04em;
   color: rgb(255 255 255 / 4%);
   white-space: nowrap;
   pointer-events: none;
@@ -234,22 +235,24 @@ const features: { icon: string; title: string; desc: string }[] = [
   text-shadow: 0 1px 0 rgb(255 255 255 / 8%);
   writing-mode: vertical-rl;
   z-index: 0;
+  max-height: 80%;
+  overflow: hidden;
 }
 
 .auth-layout__art-seal {
   position: absolute;
-  top: var(--space-7);
-  right: var(--space-7);
-  width: 72px;
-  height: 72px;
+  top: var(--space-6);
+  right: var(--space-6);
+  width: 56px;
+  height: 56px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   background: var(--gradient-seal);
-  border: 2px solid rgb(255 233 196 / 50%);
-  border-radius: 4px;
+  border: 1.5px solid rgb(255 233 196 / 55%);
+  border-radius: 3px;
   font-family: var(--font-family-serif);
   font-weight: 700;
-  font-size: 28px;
+  font-size: 22px;
   color: #ffe9c4;
   box-shadow:
     0 2px 0 rgb(31 8 11 / 60%),

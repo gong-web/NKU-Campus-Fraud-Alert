@@ -453,9 +453,9 @@ async function revealNow(): Promise<void> {
   position: relative;
   font-family: var(--font-family-serif);
   font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.16em;
-  padding: var(--space-2) var(--space-3);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  padding: 4px 10px;
   background: var(--gradient-seal);
   color: #ffe9c4;
   border: 1.5px solid rgb(255 233 196 / 50%);
@@ -562,17 +562,23 @@ async function revealNow(): Promise<void> {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+@media (width <= 1024px) {
+  .judicial-page__flow-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .judicial-page__flow-list li {
   display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: var(--space-3);
+  grid-template-columns: 32px 1fr;
+  gap: var(--space-2);
   align-items: center;
-  padding: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   background: var(--color-bg-soft);
   border: 1px solid var(--color-border-soft);
@@ -586,18 +592,18 @@ async function revealNow(): Promise<void> {
 }
 
 .judicial-page__flow-no {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
   background: var(--gradient-brand);
   color: #fff;
   font-family: var(--font-family-serif);
   font-weight: var(--font-weight-bold);
-  font-size: 13px;
+  font-size: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   box-shadow: 0 4px 8px -4px rgb(134 38 51 / 32%);
 }
 

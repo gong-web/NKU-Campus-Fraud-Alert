@@ -85,6 +85,7 @@ interface QuickEntry {
   icon: string;
   tone: "brand" | "info" | "warning";
   cta: string;
+  anchor?: string;
 }
 
 const QUICK_ENTRIES: readonly QuickEntry[] = [
@@ -103,13 +104,20 @@ const QUICK_ENTRIES: readonly QuickEntry[] = [
     cta: "查看",
   },
   {
-    title: "学习反诈知识",
-    desc: "案例库 + 测验，每月更新",
+    title: "常见诈骗手法",
+    desc: "六大类典型套路与识别要点",
     icon: "book-open",
     tone: "warning",
-    cta: "开始学习",
+    cta: "查看图谱",
+    anchor: "fraud-types",
   },
 ];
+
+function scrollToAnchor(id?: string): void {
+  if (!id) return;
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 interface Hotline {
   number: string;
@@ -346,6 +354,7 @@ const HOTLINES: readonly Hotline[] = [
         <AppButton
           variant="ghost"
           size="sm"
+          @click="scrollToAnchor(q.anchor)"
         >
           {{ q.cta }}
           <AppIcon
@@ -357,7 +366,10 @@ const HOTLINES: readonly Hotline[] = [
     </section>
 
     <!-- 双栏：诈骗类型 + 紧急联系 -->
-    <section class="student-home__grid">
+    <section
+      id="fraud-types"
+      class="student-home__grid"
+    >
       <AppCard
         padding="lg"
         :corner="true"

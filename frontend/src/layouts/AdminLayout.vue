@@ -242,10 +242,10 @@ async function handleLogout(): Promise<void> {
 .admin-layout__link {
   position: relative;
   display: grid;
-  grid-template-columns: 36px 1fr;
+  grid-template-columns: 32px 1fr;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
+  gap: var(--space-2);
+  padding: 10px var(--space-3);
   border-radius: var(--radius-md);
   text-decoration: none;
   color: rgb(255 255 255 / 78%);
@@ -283,8 +283,8 @@ async function handleLogout(): Promise<void> {
 }
 
 .admin-layout__link-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-md);
   background: rgb(255 255 255 / 8%);
   border: 1px solid rgb(255 255 255 / 8%);

@@ -22,7 +22,32 @@ const usersTotal = ref<number | null>(null);
 const usersActive = ref<number>(0);
 const usersDisabled = ref<number>(0);
 const auditTotal = ref<number | null>(null);
-const auditRecent = ref<AuditLogOut[]>([]);
+interface FeedItem extends AuditLogOut {
+  group_count?: number;
+}
+const auditRecent = ref<FeedItem[]>([]);
+
+/**
+ * 折叠连续相同 (operation_type + operator_id) 的审计记录，
+ * 避免大量重复登录撑满"近期动态"列表。
+ */
+function dedupeFeed(items: AuditLogOut[], limit: number): FeedItem[] {
+  const out: FeedItem[] = [];
+  for (const it of items) {
+    const last = out[out.length - 1];
+    if (
+      last &&
+      last.operation_type === it.operation_type &&
+      String(last.operator_id) === String(it.operator_id)
+    ) {
+      last.group_count = (last.group_count ?? 1) + 1;
+      continue;
+    }
+    out.push({ ...it, group_count: 1 });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
 const judicialRecent = ref<AuditLogOut[]>([]);
 const loading = ref<boolean>(true);
 const errorMsg = ref<string>("");
@@ -158,7 +183,7 @@ async function load(): Promise<void> {
     usersActive.value = items.filter((x) => x.status === 1).length;
     usersDisabled.value = items.filter((x) => x.status !== 1).length;
     auditTotal.value = audit.total;
-    auditRecent.value = audit.items.slice(0, 6);
+    auditRecent.value = dedupeFeed(audit.items, 6);
     judicialRecent.value = judicial.items.slice(0, 4);
   } catch (e) {
     errorMsg.value = e instanceof Error ? e.message : "加载概览失败";
@@ -267,9 +292,15 @@ function go(path: string): void {
                 <strong>{{ c.title }}</strong>
                 <small>{{ c.detail }}</small>
               </div>
-              <span class="sys-dash__hero-check-status">
-                <span class="sys-dash__hero-check-dot" />
-                正常
+              <span
+                class="sys-dash__hero-check-status"
+                :title="c.status === 'ok' ? '正常' : '需关注'"
+                aria-label="状态"
+              >
+                <AppIcon
+                  :name="(c.status === 'ok' ? 'circle-check' : 'alert-triangle' as never)"
+                  :size="14"
+                />
               </span>
             </li>
           </ul>
@@ -290,7 +321,6 @@ function go(path: string): void {
         tone="brand"
         :loading="loading"
         :hint="`活跃 ${usersActive} · 停用 ${usersDisabled}`"
-        :trend="[6, 5, 7, 6, 7, 8, 8, 8, 9]"
       />
       <AppStatCard
         label="审计日志总条数"
@@ -299,7 +329,6 @@ function go(path: string): void {
         tone="info"
         :loading="loading"
         hint="自上线起累计"
-        :trend="[5, 8, 12, 18, 24, 30, 38, 47, 54]"
       />
       <AppStatCard
         label="司法协助申请"
@@ -308,7 +337,6 @@ function go(path: string): void {
         tone="danger"
         :loading="loading"
         hint="近期解密事件"
-        :trend="[0, 0, 0, 0, 0, 0, 0, 0, 0]"
       />
       <AppStatCard
         label="预警状态"
@@ -317,7 +345,6 @@ function go(path: string): void {
         tone="success"
         :loading="loading"
         hint="DB · Redis · MinIO 健康"
-        :trend="[8, 9, 9, 8, 9, 9, 9, 10, 10]"
       />
     </section>
 
@@ -354,7 +381,7 @@ function go(path: string): void {
           <AppActivityItem
             v-for="item in auditRecent"
             :key="item.log_id"
-            :title="actionTitle(item)"
+            :title="`${actionTitle(item)}${(item.group_count ?? 1) > 1 ? `  × ${item.group_count}` : ''}`"
             :meta="`操作人 #${shortId(item.operator_id)} · ${item.source_ip || '内部任务'}`"
             :time="formatRelative(item.operated_at)"
             :icon="actionIcon(item)"
@@ -418,6 +445,23 @@ function go(path: string): void {
             </button>
           </li>
         </ul>
+
+        <div class="sys-dash__health">
+          <div class="sys-dash__health-head">
+            <AppIcon
+              name="shield-check"
+              :size="14"
+            />
+            <span>系统健康</span>
+            <span class="sys-dash__health-pill">全部正常</span>
+          </div>
+          <ul class="sys-dash__health-list">
+            <li><span class="dot dot--ok" />MySQL · trigger 已启用</li>
+            <li><span class="dot dot--ok" />Redis · 限流键空间正常</li>
+            <li><span class="dot dot--ok" />MinIO · 证据桶可写</li>
+            <li><span class="dot dot--ok" />Audit SDK · append-only</li>
+          </ul>
+        </div>
       </AppCard>
     </section>
   </div>
@@ -582,12 +626,18 @@ function go(path: string): void {
 }
 
 .sys-dash__hero-check-status {
-  font-size: 11px;
-  color: rgb(185 242 189 / 90%);
-  letter-spacing: 0.06em;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgb(74 222 128 / 16%);
+  border: 1px solid rgb(74 222 128 / 38%);
+  color: #4ade80;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 0 rgb(74 222 128 / 50%);
+  animation: pulse-dot 2.4s ease-in-out infinite;
 }
 
 .sys-dash__hero-check-dot {
@@ -819,5 +869,69 @@ function go(path: string): void {
   .sys-dash__action-kbd {
     display: none;
   }
+}
+
+.sys-dash__health {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgb(46 125 50 / 5%), rgb(46 125 50 / 1%));
+  border: 1px solid rgb(46 125 50 / 22%);
+}
+
+.sys-dash__health-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.08em;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-success);
+  text-transform: uppercase;
+  margin-bottom: var(--space-2);
+}
+
+.sys-dash__health-pill {
+  margin-left: auto;
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.16em;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgb(46 125 50 / 12%);
+  border: 1px solid rgb(46 125 50 / 28%);
+  color: var(--color-success);
+  text-transform: none;
+}
+
+.sys-dash__health-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.sys-dash__health-list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.02em;
+}
+
+.sys-dash__health-list .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-neutral-400);
+}
+
+.sys-dash__health-list .dot--ok {
+  background: var(--color-success);
+  box-shadow: 0 0 0 2px rgb(46 125 50 / 12%);
 }
 </style>

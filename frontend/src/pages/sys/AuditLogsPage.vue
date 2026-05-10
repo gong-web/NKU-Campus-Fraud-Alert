@@ -82,14 +82,6 @@ function opTone(op: string): "info" | "success" | "warning" | "danger" | "neutra
   return "neutral";
 }
 
-function opIcon(op: string): string {
-  if (op.startsWith("LOGIN")) return "log-in";
-  if (op === "LOGOUT") return "log-out";
-  if (op.startsWith("USER")) return "user-cog";
-  if (op.startsWith("DECRYPT")) return "scale";
-  return "activity";
-}
-
 const totalCount = computed<number>(() => data.value?.total ?? 0);
 const totalPages = computed<number>(() => Math.max(1, Math.ceil(totalCount.value / size.value)));
 
@@ -116,17 +108,28 @@ function shortId(v: unknown): string {
 <template>
   <div class="audit-page">
     <AppPageHeader
-      badge="审计日志"
+      badge="审计日志 · APPEND-ONLY"
       title="审计日志"
       subtitle="操作全留痕 · 任何角色不可删改 · 数据库 trigger 与 SDK 双重防护。"
     >
       <template #actions>
+        <span
+          v-if="data"
+          class="audit-page__count-pill"
+          aria-label="累计条数"
+        >
+          <AppIcon
+            name="activity"
+            :size="13"
+          />
+          累计 <strong>{{ totalCount.toLocaleString() }}</strong> 条
+        </span>
         <AppButton
-          variant="secondary"
+          variant="primary"
           @click="exportCsv"
         >
           <AppIcon
-            name="arrow-right"
+            name="download"
             :size="14"
           />
           导出 CSV
@@ -139,16 +142,37 @@ function shortId(v: unknown): string {
       class="audit-page__filter"
     >
       <div class="audit-page__filter-grid">
-        <AppInput
-          v-model="filters.op_type"
-          label="操作类型"
-          placeholder="如 LOGIN / DECRYPT_ANONYMOUS"
-        />
-        <AppInput
-          v-model="filters.object_type"
-          label="对象类型"
-          placeholder="如 user / report"
-        />
+        <label class="audit-page__select-wrap">
+          <span class="audit-page__select-label">操作类型</span>
+          <select
+            v-model="filters.op_type"
+            class="audit-page__select"
+            @change="page = 1; load()"
+          >
+            <option value="">全部</option>
+            <option value="LOGIN">LOGIN · 登录</option>
+            <option value="LOGIN_FAILED">LOGIN_FAILED · 登录失败</option>
+            <option value="LOGOUT">LOGOUT · 登出</option>
+            <option value="USER_CREATE">USER_CREATE · 创建账号</option>
+            <option value="USER_DISABLE">USER_DISABLE · 停用账号</option>
+            <option value="USER_ENABLE">USER_ENABLE · 启用账号</option>
+            <option value="DECRYPT_ANONYMOUS">DECRYPT_ANONYMOUS · 司法解密</option>
+          </select>
+        </label>
+        <label class="audit-page__select-wrap">
+          <span class="audit-page__select-label">对象类型</span>
+          <select
+            v-model="filters.object_type"
+            class="audit-page__select"
+            @change="page = 1; load()"
+          >
+            <option value="">全部</option>
+            <option value="user">user · 账号</option>
+            <option value="report">report · 上报事件</option>
+            <option value="audit_log">audit_log · 审计</option>
+            <option value="judicial_request">judicial_request · 司法</option>
+          </select>
+        </label>
         <AppInput
           v-model="filters.object_id"
           label="对象 ID"
@@ -169,6 +193,10 @@ function shortId(v: unknown): string {
             variant="ghost"
             @click="reset"
           >
+            <AppIcon
+              name="filter"
+              :size="13"
+            />
             重置
           </AppButton>
         </div>
@@ -191,21 +219,10 @@ function shortId(v: unknown): string {
         </div>
       </template>
       <template #cell-operation_type="{ row }">
-        <span class="audit-page__op">
-          <span
-            class="audit-page__op-icon"
-            :class="`audit-page__op-icon--${opTone(row.operation_type)}`"
-          >
-            <AppIcon
-              :name="(opIcon(row.operation_type) as never)"
-              :size="13"
-            />
-          </span>
-          <AppStatusTag
-            :status="opTone(row.operation_type)"
-            :text="row.operation_type"
-          />
-        </span>
+        <AppStatusTag
+          :status="opTone(row.operation_type)"
+          :text="row.operation_type"
+        />
       </template>
       <template #cell-operator_id="{ row }">
         <span
@@ -290,6 +307,27 @@ function shortId(v: unknown): string {
   gap: var(--space-4);
 }
 
+.audit-page__count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-brand-50);
+  border: 1px solid rgb(134 38 51 / 18%);
+  color: var(--color-brand-700);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.04em;
+  font-weight: var(--font-weight-medium);
+}
+
+.audit-page__count-pill strong {
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-strong);
+}
+
 .audit-page__filter {
   position: sticky;
   top: var(--space-3);
@@ -319,6 +357,50 @@ function shortId(v: unknown): string {
 .audit-page__filter-actions {
   display: flex;
   gap: var(--space-2);
+}
+
+.audit-page__select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.audit-page__select-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.04em;
+}
+
+.audit-page__select {
+  height: 38px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-strong);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing-out);
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--color-text-tertiary) 50%),
+    linear-gradient(135deg, var(--color-text-tertiary) 50%, transparent 50%);
+  background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 28px;
+}
+
+.audit-page__select:hover {
+  border-color: var(--color-brand-400);
+}
+
+.audit-page__select:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-color: var(--color-brand-500);
 }
 
 .audit-page__time {
