@@ -224,8 +224,8 @@ const stats = computed(() => {
       <template #cell-department_id="{ row }">
         <span class="users-page__dept">
           <AppIcon
-            name="info"
-            :size="12"
+            name="graduation-cap"
+            :size="13"
           />
           {{ deptName(Number(row.department_id)) }}
         </span>

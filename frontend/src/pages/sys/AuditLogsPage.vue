@@ -52,12 +52,12 @@ function reset(): void {
 onMounted(load);
 
 const columns = [
-  { key: "operated_at" as const, title: "时间", width: "150px", mono: true },
-  { key: "operation_type" as const, title: "操作", width: "180px" },
-  { key: "operator_id" as const, title: "操作人", width: "110px", mono: true },
-  { key: "object_type" as const, title: "对象", width: "100px" },
+  { key: "operated_at" as const, title: "时间", width: "118px", mono: true },
+  { key: "operation_type" as const, title: "操作", width: "172px" },
+  { key: "operator_id" as const, title: "操作人", width: "168px", mono: true },
+  { key: "object_type" as const, title: "对象", width: "84px" },
   { key: "object_id" as const, title: "对象 ID", width: "150px", mono: true },
-  { key: "source_ip" as const, title: "来源 IP", width: "130px", mono: true },
+  { key: "source_ip" as const, title: "来源 IP", width: "140px", mono: true },
   { key: "trace_id" as const, title: "Trace ID", mono: true },
 ];
 
@@ -108,8 +108,8 @@ function shortTrace(t: string | null | undefined): string {
 
 function shortId(v: unknown): string {
   const s = String(v ?? "");
-  if (s.length <= 12) return s;
-  return `${s.slice(0, 6)}…${s.slice(-4)}`;
+  if (s.length <= 10) return s;
+  return `${s.slice(0, 4)}…${s.slice(-4)}`;
 }
 </script>
 
@@ -381,9 +381,13 @@ function shortId(v: unknown): string {
 }
 
 .audit-page__id {
+  display: inline-block;
   color: var(--color-brand-700);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.04em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  word-break: keep-all;
 }
 
 .audit-page__ip {
@@ -393,6 +397,8 @@ function shortId(v: unknown): string {
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   font-size: 12px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .audit-page__objid {

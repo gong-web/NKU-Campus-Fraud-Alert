@@ -38,7 +38,10 @@ async function handleLogout(): Promise<void> {
           variant="color"
         />
       </div>
-      <nav class="student-layout__menu">
+      <nav
+        v-if="NAV.length > 1"
+        class="student-layout__menu"
+      >
         <RouterLink
           v-for="item in NAV"
           :key="item.to"
@@ -52,6 +55,18 @@ async function handleLogout(): Promise<void> {
           {{ item.label }}
         </RouterLink>
       </nav>
+      <span
+        v-else
+        class="student-layout__crumb"
+      >
+        <AppIcon
+          name="graduation-cap"
+          :size="13"
+        />
+        校园反诈
+        <span class="student-layout__crumb-sep">·</span>
+        <strong>学生工作台</strong>
+      </span>
       <div class="student-layout__user">
         <span
           class="student-layout__avatar"
@@ -118,6 +133,33 @@ async function handleLogout(): Promise<void> {
 .student-layout__menu {
   display: flex;
   gap: 4px;
+}
+
+.student-layout__crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--color-brand-50) 0%, rgb(255 244 230 / 60%) 100%);
+  border: 1px solid rgb(134 38 51 / 14%);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.06em;
+  font-weight: var(--font-weight-medium);
+}
+
+.student-layout__crumb svg {
+  color: var(--color-brand-600);
+}
+
+.student-layout__crumb-sep {
+  color: var(--color-border-strong);
+}
+
+.student-layout__crumb strong {
+  color: var(--color-brand-700);
+  font-weight: var(--font-weight-semibold);
 }
 
 .student-layout__link {
