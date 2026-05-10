@@ -84,6 +84,8 @@ const FLOW: readonly FlowStep[] = [
         <AppButton
           variant="secondary"
           size="sm"
+          :disabled="true"
+          title="部门过滤即将上线"
         >
           <AppIcon
             name="filter"
@@ -115,14 +117,22 @@ const FLOW: readonly FlowStep[] = [
             并自动写审计；任何角色都不能绕过流程或删改记录。
           </p>
           <div class="admin-dash__hero-actions">
-            <AppButton variant="secondary-on-brand">
+            <AppButton
+              variant="secondary-on-brand"
+              :disabled="true"
+              title="操作手册即将上线"
+            >
               <AppIcon
                 name="book-open"
                 :size="16"
               />
               审核操作手册
             </AppButton>
-            <AppButton variant="ghost-on-brand">
+            <AppButton
+              variant="ghost-on-brand"
+              :disabled="true"
+              title="状态分流即将上线"
+            >
               <AppIcon
                 name="filter"
                 :size="16"

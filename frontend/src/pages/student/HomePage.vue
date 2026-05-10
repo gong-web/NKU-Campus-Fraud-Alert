@@ -88,20 +88,26 @@ interface QuickEntry {
   anchor?: string;
 }
 
-const QUICK_ENTRIES: readonly QuickEntry[] = [
+interface QuickEntryX extends QuickEntry {
+  pending?: boolean;
+}
+
+const QUICK_ENTRIES: readonly QuickEntryX[] = [
   {
     title: "我要上报疑似诈骗",
     desc: "30 秒内完成快速上报，可匿名",
     icon: "siren",
     tone: "brand",
-    cta: "去上报",
+    cta: "即将上线",
+    pending: true,
   },
   {
     title: "我的上报记录",
     desc: "跟踪事件状态、补充材料",
     icon: "clipboard-list",
     tone: "info",
-    cta: "查看",
+    cta: "即将上线",
+    pending: true,
   },
   {
     title: "常见诈骗手法",
@@ -188,16 +194,20 @@ const HOTLINES: readonly Hotline[] = [
             <AppButton
               variant="secondary-on-brand"
               size="lg"
+              :disabled="true"
+              title="上报模块即将上线（业务模块组员负责）"
             >
               <AppIcon
                 name="siren"
                 :size="18"
               />
               立即上报
+              <span class="student-home__hero-soon">即将上线</span>
             </AppButton>
             <AppButton
               variant="ghost-on-brand"
               size="lg"
+              @click="scrollToAnchor('fraud-types')"
             >
               <AppIcon
                 name="info"
@@ -354,10 +364,12 @@ const HOTLINES: readonly Hotline[] = [
         <AppButton
           variant="ghost"
           size="sm"
+          :disabled="q.pending"
           @click="scrollToAnchor(q.anchor)"
         >
           {{ q.cta }}
           <AppIcon
+            v-if="!q.pending"
             name="arrow-right"
             :size="14"
           />
@@ -542,6 +554,18 @@ const HOTLINES: readonly Hotline[] = [
   gap: var(--space-2);
   flex-wrap: wrap;
   margin-top: var(--space-2);
+}
+
+.student-home__hero-soon {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgb(31 8 11 / 18%);
+  color: var(--color-brand-700);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  font-weight: var(--font-weight-bold);
+  border: 1px solid rgb(134 38 51 / 22%);
 }
 
 .student-home__hero-bullets {

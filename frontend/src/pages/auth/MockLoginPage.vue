@@ -85,7 +85,7 @@ async function submit(): Promise<void> {
 
 <template>
   <AuthLayout
-    eyebrow="DEV · Mock 登录"
+    eyebrow="DEV · MOCK LOGIN"
     subtitle="无需密码，仅在 AUTH_PROVIDER=mock 时可用，便于 4 位组员开发联调。"
   >
     <template #title>

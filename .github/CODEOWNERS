@@ -30,8 +30,17 @@
 /docs/                                  @yaoxinqiu
 /README.md                              @yaoxinqiu
 
-# 业务模块（待 4 名组员认领）
-# /backend/app/api/v1/reports.py          @member-A
-# /backend/app/api/v1/warnings.py         @member-B
-# /backend/app/api/v1/knowledge.py        @member-C
-# /backend/app/api/v1/quizzes.py          @member-D
+# 前端 / 设计系统 / 截图自动化（巩岱松 · 组员 1）
+/frontend/                              @gong-web
+/frontend/src/components/               @gong-web
+/frontend/src/styles/                   @gong-web
+/frontend/src/layouts/                  @gong-web
+/frontend/src/pages/                    @gong-web
+/frontend/shoot.mjs                     @gong-web
+/tools/shots/                           @gong-web
+
+# 业务模块（待 3 名组员认领）
+# /backend/app/api/v1/reports.py          @member-B
+# /backend/app/api/v1/warnings.py         @member-C
+# /backend/app/api/v1/knowledge.py        @member-D
+# /backend/app/api/v1/quizzes.py          @member-E
