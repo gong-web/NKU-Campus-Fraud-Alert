@@ -108,10 +108,10 @@ const FLOW: readonly FlowStep[] = [
             <span class="dot" />
             审核工作流 · 闭环
           </span>
-            <h2 class="admin-dash__hero-title">
-              事件全程可追溯，<br>
-              <span class="admin-dash__hero-em">守住校园安全防线</span>
-            </h2>
+          <h2 class="admin-dash__hero-title">
+            事件全程可追溯，<br>
+            <span class="admin-dash__hero-em">守住校园安全防线</span>
+          </h2>
           <p class="admin-dash__hero-lead">
             状态机由地基组的 service 层守护：所有状态变更必须在<strong>同一事务</strong>内完成，
             并自动写审计；任何角色都不能绕过流程或删改记录。

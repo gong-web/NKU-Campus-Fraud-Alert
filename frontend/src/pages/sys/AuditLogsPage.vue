@@ -260,15 +260,15 @@ function shortId(v: unknown): string {
             type="button"
             class="audit-page__pager-btn"
             :disabled="page <= 1 || loading"
-            @click="page = 1; load()"
             aria-label="第一页"
+            @click="page = 1; load()"
           >«</button>
           <button
             type="button"
             class="audit-page__pager-btn"
             :disabled="page <= 1 || loading"
-            @click="page = page - 1; load()"
             aria-label="上一页"
+            @click="page = page - 1; load()"
           >‹</button>
           <span class="audit-page__pager-num">
             {{ page }} / {{ totalPages }}
@@ -277,15 +277,15 @@ function shortId(v: unknown): string {
             type="button"
             class="audit-page__pager-btn"
             :disabled="page >= totalPages || loading"
-            @click="page = page + 1; load()"
             aria-label="下一页"
+            @click="page = page + 1; load()"
           >›</button>
           <button
             type="button"
             class="audit-page__pager-btn"
             :disabled="page >= totalPages || loading"
-            @click="page = totalPages; load()"
             aria-label="末页"
+            @click="page = totalPages; load()"
           >»</button>
         </span>
         <span class="audit-page__footer-hint">

@@ -364,7 +364,7 @@ const HOTLINES: readonly Hotline[] = [
         <AppButton
           variant="ghost"
           size="sm"
-          :disabled="q.pending"
+          :disabled="!!q.pending"
           @click="scrollToAnchor(q.anchor)"
         >
           {{ q.cta }}

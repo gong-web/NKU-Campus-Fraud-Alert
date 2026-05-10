@@ -169,19 +169,25 @@ const stats = computed(() => {
             class="users-page__filter-chip"
             :class="{ 'is-active': filters.status === undefined }"
             @click="filters.status = undefined; page = 1; load()"
-          >全部</button>
+          >
+            全部
+          </button>
           <button
             type="button"
             class="users-page__filter-chip"
             :class="{ 'is-active': filters.status === 1 }"
             @click="filters.status = 1; page = 1; load()"
-          >正常</button>
+          >
+            正常
+          </button>
           <button
             type="button"
             class="users-page__filter-chip"
             :class="{ 'is-active': filters.status === 2 }"
             @click="filters.status = 2; page = 1; load()"
-          >已停用</button>
+          >
+            已停用
+          </button>
         </div>
         <span class="users-page__filter-stat">
           <span>共 <strong>{{ stats.total }}</strong> 个账号</span>
@@ -262,8 +268,8 @@ const stats = computed(() => {
             type="button"
             class="users-page__pager-btn"
             :disabled="page <= 1 || loading"
-            @click="page = page - 1; load()"
             aria-label="上一页"
+            @click="page = page - 1; load()"
           >
             <AppIcon
               name="arrow-right"
@@ -279,8 +285,8 @@ const stats = computed(() => {
             type="button"
             class="users-page__pager-btn"
             :disabled="page * size >= data.total || loading"
-            @click="page = page + 1; load()"
             aria-label="下一页"
+            @click="page = page + 1; load()"
           >
             下一页
             <AppIcon

@@ -335,18 +335,24 @@ async function revealNow(): Promise<void> {
           并允许在 5 分钟内对该匿名上报进行身份解密。
         </p>
         <ul>
-          <li><AppIcon
-            name="shield-check"
-            :size="14"
-          />操作将写入审计日志（不可撤回）</li>
-          <li><AppIcon
-            name="shield-alert"
-            :size="14"
-          />将触发全员站内信告警</li>
-          <li><AppIcon
-            name="lock"
-            :size="14"
-          />解密窗口仅有 5 分钟</li>
+          <li>
+            <AppIcon
+              name="shield-check"
+              :size="14"
+            />操作将写入审计日志（不可撤回）
+          </li>
+          <li>
+            <AppIcon
+              name="shield-alert"
+              :size="14"
+            />将触发全员站内信告警
+          </li>
+          <li>
+            <AppIcon
+              name="lock"
+              :size="14"
+            />解密窗口仅有 5 分钟
+          </li>
         </ul>
         <p class="judicial-page__confirm-q">
           是否继续？
