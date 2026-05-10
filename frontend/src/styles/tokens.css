@@ -1,0 +1,244 @@
+/* ──────────────────────────────────────────────────────────────────
+ * Design Tokens · Anti-Fraud Platform · Nankai University Edition
+ *
+ * 全平台**只能**引用 token，禁止写硬编码值。
+ * 任何想新增 token 的提议都先在 docs/conventions.md 里登记。
+ *
+ * 视觉指挥棒：
+ *   · 主色取自南开校色「青莲紫」(NKU Purple #862633)，并补足金色作为奖章/印章点缀；
+ *   · 字号阶梯走 4-modular，留出 13/15/17 的禁区；
+ *   · 阴影使用「双层 + 反光内嵌」物理化叠加，不滥用 box-shadow blur。
+ * ────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── 主色：南开校色 · 青莲紫 ──────────────────────────────────── */
+  --color-brand-50: #fbeaec;
+  --color-brand-100: #f4c5cb;
+  --color-brand-200: #e69aa3;
+  --color-brand-300: #cf6e7a;
+  --color-brand-400: #ae4756;
+  --color-brand-500: #862633; /* 南开主紫 */
+  --color-brand-600: #6e1f29;
+  --color-brand-700: #561820;
+  --color-brand-800: #3a1015;
+  --color-brand-900: #1f080b;
+
+  /* ── 副色：奖章金（用于印章、勋绶、强调字符）─────────────────── */
+  --color-gold-50: #fdf6e7;
+  --color-gold-100: #f7e3b3;
+  --color-gold-200: #f0cc7a;
+  --color-gold-300: #e6b349;
+  --color-gold-400: #c89a32;
+  --color-gold-500: #a07823; /* 南开奖章金 */
+  --color-gold-600: #7a5b18;
+  --color-gold-700: #553f10;
+
+  /* ── 中性灰阶（9 阶 · 偏冷偏黑） ────────────────────────────── */
+  --color-neutral-0: #fff;
+  --color-neutral-25: #fcfcfd;
+  --color-neutral-50: #f6f7fa;
+  --color-neutral-100: #ecedf2;
+  --color-neutral-200: #d6dae3;
+  --color-neutral-300: #b3bac8;
+  --color-neutral-400: #888fa1;
+  --color-neutral-500: #5b6273;
+  --color-neutral-600: #3d4453;
+  --color-neutral-700: #232938;
+  --color-neutral-800: #131722;
+  --color-neutral-900: #0a0d14;
+
+  /* ── 功能色 ─────────────────────────────────────────────────── */
+  --color-info: #1565c0;
+  --color-success: #2e7d32;
+  --color-warning: #ef6c00;
+  --color-danger: #c62828;
+
+  /* ── 预警三级（PRD 6.1） ────────────────────────────────────── */
+  --color-warn-info: #1976d2;     /* 提示·蓝 */
+  --color-warn-warning: #ef6c00;  /* 警告·橙 */
+  --color-warn-urgent: #c62828;   /* 紧急·红 */
+
+  /* ── 字体 ────────────────────────────────────────────────────── *
+   * 思源宋体处理大标题（端庄学府感）；
+   * Inter / 苹方 / 思源黑体 处理正文与组件文字；
+   * JetBrains Mono / SF Mono 处理数字与代码。 */
+  --font-family-serif:
+    "Source Han Serif SC", "Noto Serif SC", "Songti SC", "STSong",
+    "Source Serif 4", "Source Serif Pro", georgia, serif;
+  --font-family-sans:
+    "Inter", "PingFang SC", "Microsoft YaHei", "Noto Sans SC",
+    "Source Han Sans SC", system-ui, -apple-system, sans-serif;
+  --font-family-mono:
+    "JetBrains Mono", "SF Mono", "IBM Plex Mono", menlo, consolas, monospace;
+
+  /* 字号阶梯（modular · 禁止 13/15/17 灰区） */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-size-3xl: 40px;
+  --font-size-4xl: 56px;
+
+  /* 行高 */
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.35;
+  --line-height-normal: 1.55;
+  --line-height-relaxed: 1.75;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* 字间距（中文不放空，英文/数字微负） */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.12em;
+  --tracking-widest: 0.18em;
+
+  /* ── 间距（8 倍数）───────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* ── 圆角（更克制：12 是上限，避免胶囊感） ───────────────────── */
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+
+  /* ── 阴影（5 阶 · 双层叠加 + 反光内嵌；hover 不会无逻辑加重）─── */
+  --shadow-low:
+    0 1px 1px rgb(15 18 28 / 4%),
+    0 1px 2px rgb(15 18 28 / 6%);
+  --shadow-mid:
+    0 1px 2px rgb(15 18 28 / 4%),
+    0 8px 24px -8px rgb(15 18 28 / 12%);
+  --shadow-high:
+    0 4px 8px -4px rgb(15 18 28 / 8%),
+    0 24px 48px -12px rgb(15 18 28 / 24%);
+  --shadow-overlay:
+    0 8px 16px -8px rgb(15 18 28 / 14%),
+    0 40px 80px -20px rgb(15 18 28 / 32%);
+  --shadow-glow-brand:
+    0 1px 2px rgb(134 38 51 / 18%),
+    0 12px 32px -8px rgb(134 38 51 / 36%),
+    0 24px 48px -16px rgb(134 38 51 / 28%);
+  --shadow-glow-gold:
+    0 8px 24px -8px rgb(160 120 35 / 36%),
+    0 4px 12px -4px rgb(160 120 35 / 18%);
+  --shadow-inner-soft: inset 0 1px 0 rgb(255 255 255 / 60%);
+  --shadow-inner-deep: inset 0 1px 2px rgb(15 18 28 / 8%);
+  --shadow-ring-brand: 0 0 0 3px rgb(134 38 51 / 12%);
+  --shadow-ring-focus: 0 0 0 3px rgb(134 38 51 / 24%);
+
+  /* ── 动效 ────────────────────────────────────────────────────── */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --duration-slower: 520ms;
+  --easing-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --easing-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── 语义化 token ───────────────────────────────────────────── */
+  --color-bg: var(--color-neutral-50);
+  --color-bg-soft: var(--color-neutral-25);
+  --color-surface: var(--color-neutral-0);
+  --color-surface-hover: var(--color-neutral-50);
+  --color-text: var(--color-neutral-800);
+  --color-text-strong: var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-500);
+  --color-text-tertiary: var(--color-neutral-400);
+  --color-text-on-brand: var(--color-neutral-0);
+  --color-border: var(--color-neutral-200);
+  --color-border-soft: var(--color-neutral-100);
+  --color-border-strong: var(--color-neutral-300);
+  --color-link: var(--color-brand-600);
+  --color-focus-ring: rgb(134 38 51 / 36%);
+
+  /* z-index */
+  --z-base: 1;
+  --z-decor: 2;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 800;
+  --z-modal: 900;
+  --z-toast: 1000;
+
+  /* ── 渐变与质感 ─────────────────────────────────────────────── */
+  --gradient-brand: linear-gradient(135deg, #9c2c3c 0%, #6e1f29 55%, #3a1015 100%);
+  --gradient-brand-deep: linear-gradient(160deg, #862633 0%, #4a131b 60%, #1f080b 100%);
+  --gradient-brand-soft: linear-gradient(135deg, #fbeaec 0%, #f4c5cb 100%);
+  --gradient-gold: linear-gradient(135deg, #e6b349 0%, #a07823 100%);
+  --gradient-info: linear-gradient(135deg, #1e88e5 0%, #0d47a1 100%);
+  --gradient-success: linear-gradient(135deg, #43a047 0%, #1b5e20 100%);
+  --gradient-warning: linear-gradient(135deg, #fb8c00 0%, #e65100 100%);
+  --gradient-danger: linear-gradient(135deg, #e53935 0%, #b71c1c 100%);
+
+  /* 极光：登录页主背景，多焦点光斑叠加（青莲紫 → 玄黑 → 金沙） */
+  --gradient-aurora:
+    radial-gradient(at 18% 22%, rgb(156 44 60 / 78%), transparent 42%),
+    radial-gradient(at 82% 28%, rgb(86 24 32 / 72%), transparent 48%),
+    radial-gradient(at 50% 96%, rgb(31 8 11 / 92%), transparent 58%),
+    radial-gradient(at 92% 88%, rgb(160 120 35 / 18%), transparent 38%),
+    linear-gradient(150deg, #4a131b 0%, #1f080b 60%, #0a0405 100%);
+
+  /* 校园主题：海河弧光（用于英雄卡渐变内嵌一道金光） */
+  --gradient-haihe:
+    radial-gradient(120% 80% at 50% 0%, rgb(230 179 73 / 18%), transparent 60%),
+    radial-gradient(80% 120% at 100% 100%, rgb(86 24 32 / 38%), transparent 60%),
+    var(--gradient-brand-deep);
+
+  /* 印章纹 / 落款金箔 */
+  --gradient-seal:
+    radial-gradient(circle at 30% 30%, #b03145 0%, #862633 30%, #4a131b 100%);
+
+  /* 玻璃 / 朦胧 */
+  --glass-surface: rgb(255 255 255 / 72%);
+  --glass-surface-strong: rgb(255 255 255 / 88%);
+  --glass-surface-dark: rgb(20 14 16 / 56%);
+  --glass-border: rgb(255 255 255 / 42%);
+  --glass-border-dark: rgb(255 255 255 / 12%);
+  --glass-blur: 16px;
+  --glass-blur-strong: 24px;
+
+  /* 网格 / 噪声装饰底图 */
+  --pattern-grid:
+    linear-gradient(rgb(255 255 255 / 6%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 6%) 1px, transparent 1px);
+  --pattern-dot:
+    radial-gradient(rgb(255 255 255 / 14%) 1px, transparent 1.4px);
+
+  /* 八瓣莲花暗纹（南开校徽元素，作为登录页 / 英雄卡极淡水印） */
+  --pattern-lotus:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'><g transform='translate(120 120)' fill='none' stroke='rgba(230,179,73,0.18)' stroke-width='0.6'><g><path d='M0 -78 C12 -60 12 -32 0 -16 C-12 -32 -12 -60 0 -78 Z'/></g><g transform='rotate(45)'><path d='M0 -78 C12 -60 12 -32 0 -16 C-12 -32 -12 -60 0 -78 Z'/></g><g transform='rotate(90)'><path d='M0 -78 C12 -60 12 -32 0 -16 C-12 -32 -12 -60 0 -78 Z'/></g><g transform='rotate(135)'><path d='M0 -78 C12 -60 12 -32 0 -16 C-12 -32 -12 -60 0 -78 Z'/></g><g transform='rotate(180)'><path d='M0 -78 C12 -60 12 -32 0 -16 C-12 -32 -12 -60 0 -78 Z'/></g><g transform='rotate(225)'><path d='M0 -78 C12 -60 12 -32 0 -16 C-12 -32 -12 -60 0 -78 Z'/></g><g transform='rotate(270)'><path d='M0 -78 C12 -60 12 -32 0 -16 C-12 -32 -12 -60 0 -78 Z'/></g><g transform='rotate(315)'><path d='M0 -78 C12 -60 12 -32 0 -16 C-12 -32 -12 -60 0 -78 Z'/></g></g></svg>");
+
+  /* 落款云纹（用于浅色卡片左下水印 / 极淡） */
+  --pattern-cloud:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='160' viewBox='0 0 320 160'><g fill='none' stroke='rgba(134,38,51,0.06)' stroke-width='0.8'><path d='M10 80 q20 -30 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0'/><path d='M10 110 q20 -30 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0'/></g></svg>");
+  --pattern-noise:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/></svg>");
+}
+
+/* 暗色模式（保留扩展位） */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="auto"] {
+    --color-bg: #0d1018;
+    --color-surface: #161a25;
+    --color-text: #ecf0f7;
+    --color-text-secondary: #98a2b3;
+    --color-border: #242b3a;
+    --color-border-strong: #353d4f;
+  }
+}

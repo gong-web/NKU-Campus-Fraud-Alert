@@ -1,0 +1,37 @@
+# ──────────────────────────────────────────────────────────────────
+# CODEOWNERS · 关键改动自动 @ 到对应负责人
+#
+# 顺序很重要：后写的规则覆盖前面的。
+# 仅写明确负责人；未列出的目录使用 GitHub 默认（无强制 reviewer）。
+# ──────────────────────────────────────────────────────────────────
+
+# 全局兜底（组长全部改动可见）
+*                                       @yaoxinqiu
+
+# 地基工程：组长亲审
+/backend/app/api/                       @yaoxinqiu
+/backend/app/api/auth*                  @yaoxinqiu
+/backend/app/services/audit_service.py  @yaoxinqiu
+/backend/app/services/auth_service.py   @yaoxinqiu
+/backend/app/services/user_service.py   @yaoxinqiu
+/backend/app/services/judicial_service.py @yaoxinqiu
+/backend/app/core/                      @yaoxinqiu
+/backend/app/infra/db/models/           @yaoxinqiu
+/backend/app/infra/cas/                 @yaoxinqiu
+/backend/alembic/                       @yaoxinqiu
+
+# CI / 部署 / 安全
+/.github/                               @yaoxinqiu
+/infra/                                 @yaoxinqiu
+/docker-compose.yml                     @yaoxinqiu
+/Makefile                               @yaoxinqiu
+
+# 文档
+/docs/                                  @yaoxinqiu
+/README.md                              @yaoxinqiu
+
+# 业务模块（待 4 名组员认领）
+# /backend/app/api/v1/reports.py          @member-A
+# /backend/app/api/v1/warnings.py         @member-B
+# /backend/app/api/v1/knowledge.py        @member-C
+# /backend/app/api/v1/quizzes.py          @member-D

@@ -1,0 +1,227 @@
+/* 引入设计 tokens */
+@import url("./tokens.css");
+
+/* ── Reset（保守、不破坏 Element Plus）─────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+
+  /* 数字等宽 + 中文标点收紧 + 连字 + 中文/拉丁排版调和 */
+  font-feature-settings: "tnum" 1, "ss01" 1, "cv11" 1, "palt" 1, "halt" 0;
+  font-variant-ligatures: common-ligatures contextual;
+  text-rendering: optimizeLegibility;
+  text-spacing-trim: trim-start;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  hanging-punctuation: allow-end;
+}
+
+body {
+  font-variant-numeric: tabular-nums;
+  background:
+    radial-gradient(at 0% 0%, rgb(134 38 51 / 3%), transparent 28%),
+    radial-gradient(at 100% 100%, rgb(160 120 35 / 3%), transparent 32%),
+    var(--color-bg);
+  background-attachment: fixed;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--easing-out);
+}
+
+a:hover {
+  color: var(--color-brand-700);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+}
+
+/* ── focus 可达性（WCAG）：禁止 outline:none ──────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── 数字字体（用于案件编号、金额）─────────────────────────── */
+.font-mono {
+  font-family: var(--font-family-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  letter-spacing: 0.01em;
+}
+
+/* ── 衬线（用于大标题、品牌词）─────────────────────────────── */
+.font-serif {
+  font-family: var(--font-family-serif);
+  letter-spacing: -0.01em;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+/* ── 标题基线（衬线大标题 + 负字距 + 无默认外边距） ────────── */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--tracking-tight);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  text-wrap: balance;
+}
+
+h1 {
+  font-family: var(--font-family-serif);
+  font-size: var(--font-size-2xl);
+  letter-spacing: -0.025em;
+  font-weight: var(--font-weight-bold);
+  font-feature-settings: "kern" 1, "liga" 1, "palt" 1;
+}
+
+h2 {
+  font-family: var(--font-family-serif);
+  font-size: var(--font-size-xl);
+  letter-spacing: -0.02em;
+  font-weight: var(--font-weight-semibold);
+  font-feature-settings: "kern" 1, "liga" 1, "palt" 1;
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+  font-feature-settings: "palt" 1;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+small { font-size: var(--font-size-xs); }
+
+/* 数字与单位排版（用于统计数值、时间戳） */
+.font-num {
+  font-family: var(--font-family-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-feature-settings: "tnum" 1, "zero" 1, "ss01" 1;
+  letter-spacing: 0;
+}
+
+/* 中文长正文段落，收紧标点、平衡换行 */
+.text-cn {
+  font-feature-settings: "palt" 1, "halt" 1, "kern" 1;
+  text-spacing-trim: trim-start;
+  hanging-punctuation: allow-end;
+}
+
+/* 选择器：南开紫底+米白字，尊重品牌而不刺眼 */
+::selection {
+  background: var(--color-brand-500);
+  color: #fff;
+}
+
+::-moz-selection {
+  background: var(--color-brand-500);
+  color: #fff;
+}
+
+/* 滚动条（克制风格 · 收窄 8px，南开主紫描边） */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-300);
+  border-radius: var(--radius-pill);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  transition: background var(--duration-base) var(--easing-out);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-400);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-neutral-300) transparent;
+}
+
+/* ── 过渡基线（仅 transform/opacity 默认开） ─────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .u-fade-up {
+    animation: fade-up var(--duration-slower) var(--easing-out) both;
+  }
+
+  .u-fade-up-2 { animation-delay: 80ms; }
+  .u-fade-up-3 { animation-delay: 160ms; }
+  .u-fade-up-4 { animation-delay: 240ms; }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── 视觉装饰：分割线（带渐变收尾） ───────────────────────── */
+.u-divider {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-border) 10%,
+    var(--color-border) 90%,
+    transparent
+  );
+  border: 0;
+  margin: var(--space-5) 0;
+}
+
+/* ── 视觉装饰：印章风样式（用在落款、版本号） ─────────────── */
+.u-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family-serif);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.06em;
+  background: var(--gradient-seal);
+  color: #ffe9c4;
+  border: 1px solid rgb(255 233 196 / 28%);
+  text-shadow: 0 1px 2px rgb(31 8 11 / 60%);
+  box-shadow: var(--shadow-glow-brand), var(--shadow-inner-soft);
+}

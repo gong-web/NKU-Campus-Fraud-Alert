@@ -1,0 +1,89 @@
+# ──────────────────────────────────────────────────────────────────
+# Anti-Fraud Platform · top-level .gitignore
+# 双重保险：根级 + 各子项目内部各自再 ignore 一次
+# ──────────────────────────────────────────────────────────────────
+
+# Secrets / env (零硬编码秘密)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+secrets/
+.kms-keys/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+dist/
+build/
+.tox/
+.nox/
+.python-version
+.venv/
+.venv-*/
+venv/
+env/
+ENV/
+
+# Local SQLite test artefacts
+*.db
+*.sqlite
+*.sqlite3
+
+# Node / Frontend
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+.nuxt/
+.output/
+.cache/
+coverage/
+.eslintcache
+.stylelintcache
+
+# IDE / Editor
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json.example
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Build artefacts
+*.log
+logs/
+!logs/.gitkeep
+audit_fallback.jsonl
+*.pid
+
+# Docker
+docker-volumes/
+.docker-data/
+
+# Misc
+*.bak
+*.tmp
+.tmp/
+.scratch/
