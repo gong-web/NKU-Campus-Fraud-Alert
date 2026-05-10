@@ -296,6 +296,10 @@ async function handleLogout(): Promise<void> {
     padding: var(--space-3) var(--space-4);
   }
 
+  .student-layout__crumb {
+    display: none;
+  }
+
   .student-layout__user-meta {
     display: none;
   }
