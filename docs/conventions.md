@@ -38,7 +38,7 @@
 
 ### Git / 分支
 
-- 分支名：`feature/<姓名缩写>-<UC编号>-<简述>`，例：`feature/yxq-uc10-csv-import`。
+- 分支名：`feature/<姓名缩写>-<UC编号>-<简述>`，例：`feature/gds-uc10-csv-import`。
 - Commit：[Conventional Commits](https://www.conventionalcommits.org/)，commitlint 强制。
 
 ---

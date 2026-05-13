@@ -5,32 +5,32 @@
 # 仅写明确负责人；未列出的目录使用 GitHub 默认（无强制 reviewer）。
 # ──────────────────────────────────────────────────────────────────
 
-# 全局兜底（组长全部改动可见）
-*                                       @yaoxinqiu
+# 全局兜底
+*                                       @gong-web
 
-# 地基工程：组长亲审
-/backend/app/api/                       @yaoxinqiu
-/backend/app/api/auth*                  @yaoxinqiu
-/backend/app/services/audit_service.py  @yaoxinqiu
-/backend/app/services/auth_service.py   @yaoxinqiu
-/backend/app/services/user_service.py   @yaoxinqiu
-/backend/app/services/judicial_service.py @yaoxinqiu
-/backend/app/core/                      @yaoxinqiu
-/backend/app/infra/db/models/           @yaoxinqiu
-/backend/app/infra/cas/                 @yaoxinqiu
-/backend/alembic/                       @yaoxinqiu
+# 地基工程
+/backend/app/api/                       @gong-web
+/backend/app/api/auth*                  @gong-web
+/backend/app/services/audit_service.py  @gong-web
+/backend/app/services/auth_service.py   @gong-web
+/backend/app/services/user_service.py   @gong-web
+/backend/app/services/judicial_service.py @gong-web
+/backend/app/core/                      @gong-web
+/backend/app/infra/db/models/           @gong-web
+/backend/app/infra/cas/                 @gong-web
+/backend/alembic/                       @gong-web
 
 # CI / 部署 / 安全
-/.github/                               @yaoxinqiu
-/infra/                                 @yaoxinqiu
-/docker-compose.yml                     @yaoxinqiu
-/Makefile                               @yaoxinqiu
+/.github/                               @gong-web
+/infra/                                 @gong-web
+/docker-compose.yml                     @gong-web
+/Makefile                               @gong-web
 
 # 文档
-/docs/                                  @yaoxinqiu
-/README.md                              @yaoxinqiu
+/docs/                                  @gong-web
+/README.md                              @gong-web
 
-# 前端 / 设计系统 / 截图自动化（巩岱松 · 组员 1）
+# 前端 / 设计系统 / 截图自动化（巩岱松）
 /frontend/                              @gong-web
 /frontend/src/components/               @gong-web
 /frontend/src/styles/                   @gong-web
