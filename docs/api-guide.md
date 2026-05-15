@@ -116,6 +116,139 @@ async def test_other_role_blocked(client: AsyncClient, seed_minimum):
 
 ---
 
+## 已实现接口示例（UC-01 / UC-02，@yxq）
+
+> 以下为真实已落地接口，可直接在 `http://localhost:8000/docs` 验证。
+
+### POST /api/v1/reports — 提交诈骗事件上报
+
+**权限**：`report:create`（STUDENT 默认具备）  
+**说明**：支持实名与匿名，匿名时服务端加密真实身份后写入隔离表。
+
+```http
+POST /api/v1/reports
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Cookie: afp_session=<登录后的 session>
+
+{
+  "title": "收到可疑退款短信",
+  "description": "收到自称银行客服的短信，要求点击链接退款，链接疑似钓鱼网站。",
+  "fraud_type_id": 1,
+  "incident_date": "2026-05-01",
+  "amount": "500.00",
+  "fraud_method": "假冒银行客服+钓鱼链接",
+  "is_anonymous": false,
+  "contact_way": "13800000000"
+}
+```
+
+成功响应 `201 Created`：
+
+```json
+{
+  "case_id": 123456789012345678,
+  "case_no": "2026-UNKNOWN-345678",
+  "title": "收到可疑退款短信",
+  "status": "PENDING",
+  "fraud_type_id": 1,
+  "fraud_type_name": "电信诈骗",
+  "incident_date": "2026-05-01",
+  "amount": "500.00",
+  "is_anonymous": false,
+  "dept_code": "UNKNOWN",
+  "created_at": "2026-05-01T10:30:00+08:00",
+  "updated_at": "2026-05-01T10:30:00+08:00"
+}
+```
+
+失败响应（诈骗类型不存在）`422 Unprocessable Entity`：
+
+```json
+{ "code": 30004, "message": "无效的诈骗类型", "data": null, "trace_id": "..." }
+```
+
+---
+
+### POST /api/v1/drafts — 保存草稿
+
+**权限**：`report:create`  
+**说明**：所有字段均可选，草稿 30 天后自动清理。
+
+```http
+POST /api/v1/drafts
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Cookie: afp_session=<session>
+
+{
+  "title": "刷单兼职诈骗",
+  "description": "对方要求先垫付资金做任务，到达一定金额后消失。",
+  "fraud_type_id": 2,
+  "is_anonymous": true
+}
+```
+
+成功响应 `201 Created`：
+
+```json
+{
+  "draft_id": 234567890123456789,
+  "title": "刷单兼职诈骗",
+  "description": "对方要求先垫付资金做任务，到达一定金额后消失。",
+  "fraud_type_id": 2,
+  "incident_date": null,
+  "amount": null,
+  "fraud_method": null,
+  "is_anonymous": true,
+  "contact_way": null,
+  "created_at": "2026-05-01T10:35:00+08:00",
+  "updated_at": "2026-05-01T10:35:00+08:00",
+  "expires_at": "2026-05-31T10:35:00+08:00",
+  "evidence_count": 0
+}
+```
+
+---
+
+### GET /api/v1/reports/my — 我的上报列表
+
+**权限**：`report:read_own`  
+**分页**：`?page=1&size=20`，可加 `&status=PENDING` 筛选。
+
+```http
+GET /api/v1/reports/my?page=1&size=20
+Cookie: afp_session=<session>
+```
+
+成功响应 `200 OK`：
+
+```json
+{
+  "items": [
+    {
+      "case_id": 123456789012345678,
+      "case_no": "2026-UNKNOWN-345678",
+      "title": "收到可疑退款短信",
+      "status": "PENDING",
+      "fraud_type_id": 1,
+      "fraud_type_name": "电信诈骗",
+      "incident_date": "2026-05-01",
+      "amount": "500.00",
+      "is_anonymous": false,
+      "dept_code": "UNKNOWN",
+      "created_at": "2026-05-01T10:30:00+08:00",
+      "updated_at": "2026-05-01T10:30:00+08:00"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "size": 20
+}
+```
+
+---
+
 ## 完成后检查清单（PR 审查时也会问）
 
 - [ ] schema 输入有最大长度限制（防 DoS）

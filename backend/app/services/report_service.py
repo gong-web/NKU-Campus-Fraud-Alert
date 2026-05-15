@@ -11,7 +11,7 @@ from app.core.logging import get_logger
 from app.core.security import encrypt_field
 from app.core.snowflake import next_snowflake_id
 from app.domain.user_snapshot import UserSnapshot
-from app.exceptions import PermissionDenied
+from app.exceptions import AppException, PermissionDenied
 from app.infra.db.models.case_anonymous_reporter import CaseAnonymousReporter
 from app.infra.db.models.case_status_history import CaseStatusHistory
 from app.infra.db.models.evidence_file import EvidenceFile
@@ -49,12 +49,18 @@ logger = get_logger(__name__)
 _DRAFT_TTL_DAYS = 30
 
 
-class BusinessError(Exception):
-    """业务规则校验失败。"""
+class BusinessError(AppException):
+    """业务规则校验失败（上报域 3xxxx）。
+
+    ``code`` 参数接收 HTTP 状态码（400 / 404 / 422），内部自动映射到 3xxxx 应用错误码。
+    """
+
+    default_message = "业务规则校验失败"
+    _APP_CODE_MAP = {400: 30001, 404: 30002, 422: 30004}
 
     def __init__(self, message: str, code: int = 400) -> None:
-        super().__init__(message)
-        self.code = code
+        self.http_status = code  # 必须在 super().__init__ 之前设置实例属性
+        super().__init__(message, code=self._APP_CODE_MAP.get(code, 30001))
 
 
 # ── 诈骗类型 ────────────────────────────────────────────────────────
