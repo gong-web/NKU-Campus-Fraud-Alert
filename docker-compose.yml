@@ -26,7 +26,7 @@ services:
       --collation-server=utf8mb4_0900_ai_ci
       --sql-mode="STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO"
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./infra/docker/mysql/init:/docker-entrypoint-initdb.d:ro

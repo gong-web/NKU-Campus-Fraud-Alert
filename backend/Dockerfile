@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7
 # ──────────────────────────────────────────────────────────────────
 # Anti-Fraud Backend · 多阶段 Dockerfile
 #  - builder: 装依赖 (uv)
@@ -17,6 +16,15 @@ ENV PYTHONUNBUFFERED=1 \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     TZ=Asia/Shanghai
+RUN sed -i 's|http://deb.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g' \
+        /etc/apt/sources.list.d/debian.sources 2>/dev/null; \
+    sed -i 's|http://security.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g' \
+        /etc/apt/sources.list.d/debian.sources 2>/dev/null; \
+    sed -i 's|http://deb.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g' \
+        /etc/apt/sources.list 2>/dev/null; \
+    sed -i 's|http://security.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g' \
+        /etc/apt/sources.list 2>/dev/null; \
+    true
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl ca-certificates tzdata \
     && rm -rf /var/lib/apt/lists/*

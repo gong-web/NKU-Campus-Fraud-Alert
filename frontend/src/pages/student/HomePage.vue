@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import {
   AppButton,
@@ -7,6 +8,8 @@ import {
   AppIcon,
   AppPageHeader,
 } from "@/components";
+
+const router = useRouter();
 
 const auth = useAuthStore();
 
@@ -98,16 +101,16 @@ const QUICK_ENTRIES: readonly QuickEntryX[] = [
     desc: "30 秒内完成快速上报，可匿名",
     icon: "siren",
     tone: "brand",
-    cta: "即将上线",
-    pending: true,
+    cta: "立即上报",
+    anchor: "report-form",
   },
   {
     title: "我的上报记录",
     desc: "跟踪事件状态、补充材料",
     icon: "clipboard-list",
     tone: "info",
-    cta: "即将上线",
-    pending: true,
+    cta: "查看记录",
+    anchor: "my-reports",
   },
   {
     title: "常见诈骗手法",
@@ -119,8 +122,14 @@ const QUICK_ENTRIES: readonly QuickEntryX[] = [
   },
 ];
 
+const ROUTE_ANCHORS = new Set(["report-form", "my-reports"]);
+
 function scrollToAnchor(id?: string): void {
   if (!id) return;
+  if (ROUTE_ANCHORS.has(id)) {
+    void router.push({ name: id });
+    return;
+  }
   const el = document.getElementById(id);
   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -194,15 +203,13 @@ const HOTLINES: readonly Hotline[] = [
             <AppButton
               variant="secondary-on-brand"
               size="lg"
-              :disabled="true"
-              title="上报模块即将上线（业务模块组员负责）"
+              @click="router.push({ name: 'report-form' })"
             >
               <AppIcon
                 name="siren"
                 :size="18"
               />
               立即上报
-              <span class="student-home__hero-soon">即将上线</span>
             </AppButton>
             <AppButton
               variant="ghost-on-brand"

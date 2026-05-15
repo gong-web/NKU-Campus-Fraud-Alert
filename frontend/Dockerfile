@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7
 ARG NODE_VERSION=20
 
 # ── builder ──────────────────────────────────────────────────────
@@ -13,7 +12,8 @@ RUN npm run build
 FROM node:${NODE_VERSION}-alpine AS dev
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 EXPOSE 5173
 CMD ["npm", "run", "dev"]
 

@@ -2,7 +2,7 @@
 interface Props {
   /** 视觉强度：plain（默认）、brand（品牌渐变）、surface-low（更轻底）、glass（玻璃）。 */
   tone?: "plain" | "brand" | "surface-low" | "glass";
-  padding?: "sm" | "md" | "lg";
+  padding?: "none" | "sm" | "md" | "lg";
   /** 加 hover 抬升动画。 */
   interactive?: boolean;
   /** 显示左上角的金箔角线（仅在 plain/glass 调）。 */
@@ -78,6 +78,10 @@ withDefaults(defineProps<Props>(), {
       rgb(255 255 255 / 70%) 0,
       transparent 1px
     );
+}
+
+.app-card--p-none {
+  padding: 0;
 }
 
 .app-card--p-sm {

@@ -35,6 +35,44 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/student/HomePage.vue"),
         meta: { title: "学生首页" },
       },
+      // UC-01：上报
+      {
+        path: "report",
+        name: "report-form",
+        component: () => import("@/pages/student/ReportFormPage.vue"),
+        meta: { title: "我要上报" },
+      },
+      {
+        path: "report/success",
+        name: "report-success",
+        component: () => import("@/pages/student/ReportSuccessPage.vue"),
+        meta: { title: "上报成功" },
+      },
+      // UC-02：个人中心 + 我的上报
+      {
+        path: "profile",
+        name: "student-profile",
+        component: () => import("@/pages/student/ProfilePage.vue"),
+        meta: { title: "个人中心" },
+      },
+      {
+        path: "reports",
+        name: "my-reports",
+        component: () => import("@/pages/student/MyReportsPage.vue"),
+        meta: { title: "我的上报" },
+      },
+      {
+        path: "reports/:case_id",
+        name: "report-detail",
+        component: () => import("@/pages/student/ReportDetailPage.vue"),
+        meta: { title: "案件详情" },
+      },
+      {
+        path: "drafts",
+        name: "drafts",
+        component: () => import("@/pages/student/DraftsPage.vue"),
+        meta: { title: "草稿箱" },
+      },
     ],
   },
   // ── 审核管理员 ───────────────────────────────────────────
