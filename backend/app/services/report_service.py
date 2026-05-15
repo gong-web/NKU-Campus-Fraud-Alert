@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import ClassVar
 
 from fastapi import UploadFile
 
@@ -56,7 +57,7 @@ class BusinessError(AppException):
     """
 
     default_message = "业务规则校验失败"
-    _APP_CODE_MAP = {400: 30001, 404: 30002, 422: 30004}
+    _APP_CODE_MAP: ClassVar[dict[int, int]] = {400: 30001, 404: 30002, 422: 30004}
 
     def __init__(self, message: str, code: int = 400) -> None:
         self.http_status = code  # 必须在 super().__init__ 之前设置实例属性
@@ -157,7 +158,9 @@ async def create_report(
         after={"case_no": case_no, "is_anonymous": data.is_anonymous},
     )
 
-    logger.info("report_created", case_no=case_no, user_id=current.user_id, anonymous=data.is_anonymous)
+    logger.info(
+        "report_created", case_no=case_no, user_id=current.user_id, anonymous=data.is_anonymous
+    )
 
     return ReportOut(
         case_id=case.case_id,
@@ -237,6 +240,14 @@ async def upload_evidence(
         )
         await evidence_repo.add(ev)
 
+    audit = get_audit_service()
+    await audit.write(
+        operator=current,
+        op_type="EVIDENCE_UPLOAD",
+        obj_type="evidence_file",
+        obj_id=str(file_id),
+        after={"case_id": case_id, "mime": mime, "size": len(content)},
+    )
     logger.info("evidence_uploaded", case_id=case_id, file_id=file_id, size=len(content))
     return EvidenceFileOut.model_validate(ev)
 
@@ -375,6 +386,14 @@ async def create_draft(
         await draft_repo.add(draft)
         ev_count = await evidence_repo.count_by_draft(draft.draft_id)
 
+    audit = get_audit_service()
+    await audit.write(
+        operator=current,
+        op_type="DRAFT_CREATE",
+        obj_type="report_draft",
+        obj_id=str(draft.draft_id),
+        after={"title": (data.title or "")[:80]},
+    )
     return _draft_to_out(draft, evidence_count=ev_count)
 
 
@@ -408,6 +427,14 @@ async def update_draft(
         await session.flush()
         ev_count = await evidence_repo.count_by_draft(draft_id)
 
+    audit = get_audit_service()
+    await audit.write(
+        operator=current,
+        op_type="DRAFT_UPDATE",
+        obj_type="report_draft",
+        obj_id=str(draft_id),
+        after={"title": (data.title or "")[:80]},
+    )
     return _draft_to_out(draft, evidence_count=ev_count)
 
 
@@ -459,6 +486,14 @@ async def delete_draft(draft_id: int, *, current: UserSnapshot) -> None:
             await evidence_repo.delete(ev)
 
         await draft_repo.delete(draft)
+
+    audit = get_audit_service()
+    await audit.write(
+        operator=current,
+        op_type="DRAFT_DELETE",
+        obj_type="report_draft",
+        obj_id=str(draft_id),
+    )
 
 
 async def upload_draft_evidence(
@@ -512,6 +547,14 @@ async def upload_draft_evidence(
         )
         await evidence_repo.add(ev)
 
+    audit = get_audit_service()
+    await audit.write(
+        operator=current,
+        op_type="DRAFT_EVIDENCE_UPLOAD",
+        obj_type="evidence_file",
+        obj_id=str(file_id),
+        after={"draft_id": draft_id, "mime": mime, "size": len(content)},
+    )
     return EvidenceFileOut.model_validate(ev)
 
 

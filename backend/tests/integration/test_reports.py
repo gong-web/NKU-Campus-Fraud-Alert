@@ -15,8 +15,7 @@ import re
 import pytest
 from httpx import AsyncClient
 
-from app.infra.db.models import Department, FraudType, Permission, Role, RolePermission, User
-from app.infra.db.models.user import UserStatus
+from app.infra.db.models import Department, FraudType, Permission, Role, RolePermission
 from app.services import permissions as perm
 
 pytestmark = pytest.mark.integration
@@ -63,12 +62,8 @@ async def seed_reports(db_session) -> None:
     # 4. 角色-权限关联
     db_session.add_all(
         [
-            RolePermission(
-                role_id=student_role.role_id, permission_id=p_create.permission_id
-            ),
-            RolePermission(
-                role_id=student_role.role_id, permission_id=p_read_own.permission_id
-            ),
+            RolePermission(role_id=student_role.role_id, permission_id=p_create.permission_id),
+            RolePermission(role_id=student_role.role_id, permission_id=p_read_own.permission_id),
         ]
     )
 
@@ -97,9 +92,7 @@ async def seed_reports(db_session) -> None:
 
 @pytest.mark.asyncio
 class TestCreateReport:
-    async def test_create_report_success(
-        self, client: AsyncClient, seed_reports
-    ) -> None:
+    async def test_create_report_success(self, client: AsyncClient, seed_reports) -> None:
         """学生提交完整上报 → 201，返回有效案件编号和 PENDING 状态。"""
         # 登录（mock 模式：cas_account 即票据，未知账号自动注册为 STUDENT）
         r = await client.post(
@@ -155,9 +148,7 @@ class TestCreateReport:
         assert r.status_code == 422, r.text
         assert r.json()["code"] == 30004
 
-    async def test_create_report_unauthenticated(
-        self, client: AsyncClient, seed_reports
-    ) -> None:
+    async def test_create_report_unauthenticated(self, client: AsyncClient, seed_reports) -> None:
         """未登录直接调用上报接口 → 401，应用错误码 20001。"""
         r = await client.post(
             "/api/v1/reports",
@@ -177,9 +168,7 @@ class TestCreateReport:
 
 @pytest.mark.asyncio
 class TestDraftCRUD:
-    async def test_create_and_get_draft(
-        self, client: AsyncClient, seed_reports
-    ) -> None:
+    async def test_create_and_get_draft(self, client: AsyncClient, seed_reports) -> None:
         """学生创建草稿 → 201；再查询同一草稿 → 200，内容一致。"""
         r = await client.post(
             "/api/v1/auth/cas/mock-login",
@@ -203,9 +192,7 @@ class TestDraftCRUD:
         assert r.status_code == 200, r.text
         assert r.json()["draft_id"] == draft["draft_id"]
 
-    async def test_other_user_cannot_access_draft(
-        self, client: AsyncClient, seed_reports
-    ) -> None:
+    async def test_other_user_cannot_access_draft(self, client: AsyncClient, seed_reports) -> None:
         """用户 B 不能查看用户 A 的草稿 → 403，应用错误码 20002。"""
         # 用户 A 登录并创建草稿
         r = await client.post(
