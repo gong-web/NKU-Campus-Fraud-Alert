@@ -16,6 +16,7 @@ from app.core.snowflake import next_snowflake_id
 from app.infra.cache.rbac_cache import RBACCache
 from app.infra.db.models import (
     Department,
+    FraudType,
     Permission,
     Role,
     RolePermission,
@@ -95,6 +96,18 @@ TEST_USERS: list[dict[str, str]] = [
 
 async def seed_all() -> None:  # noqa: C901 - seed 脚本按步骤串行更容易审计
     async with uow() as session:
+        # 0. 诈骗类型字典（迁移已 bulk_insert，这里做幂等补全）
+        for ft_data in FRAUD_TYPES:
+            existing_ft = (
+                await session.execute(
+                    select(FraudType).where(FraudType.type_code == ft_data["type_code"])
+                )
+            ).scalar_one_or_none()
+            if existing_ft is None:
+                session.add(FraudType(**ft_data, sort_order=FRAUD_TYPES.index(ft_data) + 1))
+        await session.flush()
+        logger.info("seed_fraud_types_done")
+
         # 1. 院系
         for dept_data in DEPARTMENTS:
             existing_dept = (

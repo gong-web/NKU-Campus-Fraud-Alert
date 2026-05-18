@@ -20,6 +20,10 @@ interface NavItem {
 
 const NAV: readonly NavItem[] = [
   { to: "/student/home", label: "首页", icon: "activity" },
+  { to: "/student/report", label: "我要上报", icon: "siren" },
+  { to: "/student/reports", label: "我的上报", icon: "clipboard-list" },
+  { to: "/student/drafts", label: "草稿箱", icon: "file-text" },
+  { to: "/student/profile", label: "个人中心", icon: "user" },
 ];
 
 async function handleLogout(): Promise<void> {

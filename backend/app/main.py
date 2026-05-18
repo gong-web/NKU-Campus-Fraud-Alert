@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -21,6 +22,7 @@ from app.infra.cache.client import close_redis
 from app.infra.cache.rbac_cache import RBACCache
 from app.infra.db.session import dispose_engine, uow
 from app.infra.repositories.role import RoleRepository
+from app.tasks.draft_cleanup import run_draft_cleanup_loop
 
 logger = get_logger(__name__)
 
@@ -51,8 +53,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             note="将首次鉴权失败时回退到 DB；建议执行 `make migrate && make seed`",
         )
 
+    # 启动草稿清理后台任务（UC-01：每 24 小时清理 30 天前的草稿）
+    cleanup_task = asyncio.create_task(run_draft_cleanup_loop())
+
     yield
 
+    cleanup_task.cancel()
     logger.info("app_shutting_down")
     await close_redis()
     await dispose_engine()

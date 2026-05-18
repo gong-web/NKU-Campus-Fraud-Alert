@@ -32,6 +32,7 @@ type IconName =
   | "log-in"
   | "log-out"
   | "arrow-right"
+  | "arrow-left"
   | "chevron-right"
   | "circle-check"
   | "circle-x"
@@ -43,7 +44,23 @@ type IconName =
   | "plus"
   | "filter"
   | "download"
-  | "shield";
+  | "shield"
+  | "loader"
+  | "file"
+  | "clock"
+  | "tag"
+  | "calendar"
+  | "image"
+  | "edit"
+  | "trash-2"
+  | "upload"
+  | "save"
+  | "send"
+  | "x"
+  | "eye"
+  | "eye-off"
+  | "inbox"
+  | "check-circle";
 
 interface Props {
   name: IconName;
@@ -113,6 +130,38 @@ const ICONS: Record<IconName, string> = {
   filter: "M22 3H2l8 9.46V19l4 2v-8.54Z",
   download: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3",
   shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z",
+  loader:
+    "M12 2v4 M12 18v4 M4.93 4.93l2.83 2.83 M16.24 16.24l2.83 2.83 M2 12h4 M18 12h4 M4.93 19.07l2.83-2.83 M16.24 7.76l2.83-2.83",
+  file:
+    "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z M14 2v6h6",
+  clock:
+    "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z M12 6v6l4 2",
+  tag:
+    "M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.3-7.3a1 1 0 0 0 0-1.41Z M7 7h.01",
+  calendar:
+    "M8 2v4 M16 2v4 M3 10h18 M21 8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2Z",
+  image:
+    "M21 12a9 9 0 1 1-6.219-8.56 M2.5 18l6-6 3 3 5-5 5 5",
+  edit:
+    "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z",
+  "trash-2":
+    "M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6 M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M10 11v6 M14 11v6",
+  upload:
+    "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12",
+  save:
+    "M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z M17 21v-8H7v8 M7 3v5h8",
+  send:
+    "M22 2 11 13 M22 2 15 22 9 13 2 9Z",
+  x: "M18 6 6 18 M6 6l12 12",
+  eye:
+    "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z",
+  "eye-off":
+    "M9.88 9.88a3 3 0 1 0 4.24 4.24 M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 7 11 7a13.16 13.16 0 0 1-1.67 2.68 M6.61 6.61A13.526 13.526 0 0 0 1 12s4 7 11 7a9.74 9.74 0 0 0 5.39-1.61 M2 2l20 20",
+  inbox:
+    "M22 12h-6l-2 3H10l-2-3H2 M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z",
+  "check-circle":
+    "M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4 12 14.01l-3-3",
+  "arrow-left": "M19 12H5 M12 19l-7-7 7-7",
 };
 
 const path = computed<string>(() => ICONS[props.name]);
