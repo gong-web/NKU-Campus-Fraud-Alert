@@ -16,7 +16,7 @@ const filters = reactive({
   op_type: "",
   object_type: "",
   object_id: "",
-  operator_id: undefined as number | undefined,
+  operator_id: undefined as string | undefined,
 });
 const page = ref<number>(1);
 const size = ref<number>(20);

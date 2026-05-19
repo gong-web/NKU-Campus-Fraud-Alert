@@ -31,7 +31,7 @@ async def request_decryption(
 ) -> JudicialDecryptRequestOut:
     res = await _svc.request_decryption(
         operator=current,
-        report_id=body.report_id,
+        report_id=int(body.report_id),
         judicial_doc_no=body.judicial_doc_no,
         reason=body.reason,
         related_case_no=body.related_case_no,

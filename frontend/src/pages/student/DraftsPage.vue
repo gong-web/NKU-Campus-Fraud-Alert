@@ -8,7 +8,7 @@ import { AppButton, AppCard, AppIcon, AppPageHeader } from "@/components";
 const router = useRouter();
 const loading = ref(true);
 const drafts = ref<DraftOut[]>([]);
-const deletingId = ref<number | null>(null);
+const deletingId = ref<string | null>(null);
 
 async function load() {
   loading.value = true;
@@ -19,7 +19,7 @@ async function load() {
   }
 }
 
-async function deleteDraft(id: number) {
+async function deleteDraft(id: string) {
   if (!confirm("确认删除该草稿？关联的证据图片也将一并删除。")) return;
   deletingId.value = id;
   try {

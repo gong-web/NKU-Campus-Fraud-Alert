@@ -9,10 +9,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class AuditLogOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, coerce_numbers_to_str=True)
 
-    log_id: int
-    operator_id: int
+    log_id: str
+    operator_id: str
     operation_type: str
     object_type: str
     object_id: str

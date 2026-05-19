@@ -162,6 +162,69 @@ class TestCreateReport:
         assert r.status_code == 401, r.text
         assert r.json()["code"] == 20001
 
+    async def test_anonymous_report_visible_in_my_reports_and_detail(
+        self, client: AsyncClient, seed_reports
+    ) -> None:
+        r = await client.post(
+            "/api/v1/auth/cas/mock-login",
+            json={"cas_account": "rpt_alice_anon_001"},
+        )
+        assert r.status_code == 200, r.text
+
+        create = await client.post(
+            "/api/v1/reports",
+            json={
+                "title": "匿名上报测试",
+                "description": "这是一段用于匿名上报测试的详细描述文字，确保长度足够。",
+                "fraud_type_id": 1,
+                "incident_date": "2026-05-01",
+                "is_anonymous": True,
+            },
+        )
+        assert create.status_code == 201, create.text
+        case_id = create.json()["case_id"]
+
+        listing = await client.get("/api/v1/reports/my")
+        assert listing.status_code == 200, listing.text
+        assert any(item["case_id"] == case_id for item in listing.json()["items"])
+
+        detail = await client.get(f"/api/v1/reports/{case_id}")
+        assert detail.status_code == 200, detail.text
+        assert detail.json()["case_id"] == case_id
+
+    async def test_anonymous_report_owner_can_upload_evidence(
+        self, client: AsyncClient, seed_reports, tmp_path, monkeypatch
+    ) -> None:
+        import app.services.storage_service as storage_service
+
+        monkeypatch.setattr(storage_service, "_UPLOAD_DIR", tmp_path)
+
+        r = await client.post(
+            "/api/v1/auth/cas/mock-login",
+            json={"cas_account": "rpt_alice_anon_002"},
+        )
+        assert r.status_code == 200, r.text
+
+        create = await client.post(
+            "/api/v1/reports",
+            json={
+                "title": "匿名上报附证据",
+                "description": "这是一段用于匿名上报上传证据测试的详细描述文字，确保长度足够。",
+                "fraud_type_id": 1,
+                "incident_date": "2026-05-01",
+                "is_anonymous": True,
+            },
+        )
+        assert create.status_code == 201, create.text
+        case_id = create.json()["case_id"]
+
+        upload = await client.post(
+            f"/api/v1/reports/{case_id}/evidence",
+            files={"file": ("proof.png", b"fake-image-content", "image/png")},
+        )
+        assert upload.status_code == 201, upload.text
+        assert upload.json()["original_name"] == "proof.png"
+
 
 # ── 草稿管理（POST /api/v1/drafts, GET /api/v1/drafts/{id}）────────
 
@@ -216,3 +279,38 @@ class TestDraftCRUD:
         r = await client.get(f"/api/v1/drafts/{draft_id}")
         assert r.status_code == 403, r.text
         assert r.json()["code"] == 20002
+
+    async def test_draft_evidence_persists_and_can_be_read(
+        self, client: AsyncClient, seed_reports, tmp_path, monkeypatch
+    ) -> None:
+        import app.services.storage_service as storage_service
+
+        monkeypatch.setattr(storage_service, "_UPLOAD_DIR", tmp_path)
+
+        r = await client.post(
+            "/api/v1/auth/cas/mock-login",
+            json={"cas_account": "dft_alice_evidence_001"},
+        )
+        assert r.status_code == 200, r.text
+
+        create = await client.post("/api/v1/drafts", json={"title": "带证据草稿"})
+        assert create.status_code == 201, create.text
+        draft_id = create.json()["draft_id"]
+
+        upload = await client.post(
+            f"/api/v1/drafts/{draft_id}/evidence",
+            files={"file": ("proof.png", b"fake-image-content", "image/png")},
+        )
+        assert upload.status_code == 201, upload.text
+        file_id = upload.json()["file_id"]
+
+        detail = await client.get(f"/api/v1/drafts/{draft_id}")
+        assert detail.status_code == 200, detail.text
+        body = detail.json()
+        assert body["evidence_count"] == 1
+        assert len(body["evidence_list"]) == 1
+        assert body["evidence_list"][0]["file_id"] == file_id
+
+        content = await client.get(f"/api/v1/drafts/{draft_id}/evidence/{file_id}")
+        assert content.status_code == 200, content.text
+        assert content.content == b"fake-image-content"

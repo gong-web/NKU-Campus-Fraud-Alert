@@ -16,6 +16,7 @@ interface NavItem {
 
 const NAV: readonly NavItem[] = [
   { to: "/admin/dashboard", label: "工作台", icon: "activity", description: "待处理事件总览" },
+  { to: "/admin/reports", label: "审核队列", icon: "clipboard-list", description: "筛选、查看并处理案件" },
 ];
 
 const initial = computed<string>(() => {

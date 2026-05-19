@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CASCallbackQuery(BaseModel):
@@ -23,7 +23,9 @@ class LoginUrlOut(BaseModel):
 class WhoAmIOut(BaseModel):
     """``GET /api/v1/auth/me`` 响应。"""
 
-    user_id: int
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
+    user_id: str
     cas_account: str
     real_name: str
     role_id: int

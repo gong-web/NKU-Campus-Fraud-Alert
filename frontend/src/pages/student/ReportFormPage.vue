@@ -1,12 +1,22 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import type { FraudType, ReportCreateIn } from "@/api/reports";
+import type { EvidenceFileOut, FraudType, ReportCreateIn } from "@/api/reports";
 import { reportsApi } from "@/api/reports";
 import { AppButton, AppCard, AppIcon, AppPageHeader } from "@/components";
 
 const router = useRouter();
 const route = useRoute();
+
+interface SavedEvidenceItem extends EvidenceFileOut {
+  preview_url: string | null;
+}
+
+interface PendingEvidenceItem {
+  local_id: string;
+  file: File;
+  preview_url: string | null;
+}
 
 // ── State ────────────────────────────────────────────────────────
 const fraudTypes = ref<FraudType[]>([]);
@@ -14,7 +24,7 @@ const loading = ref(false);
 const submitLoading = ref(false);
 const draftLoading = ref(false);
 const errorMsg = ref("");
-const currentDraftId = ref<number | null>(null);
+const currentDraftId = ref<string | null>(null);
 
 const form = ref<ReportCreateIn>({
   title: "",
@@ -27,8 +37,8 @@ const form = ref<ReportCreateIn>({
   contact_way: null,
 });
 
-const pendingFiles = ref<File[]>([]);
-const filePreviews = ref<string[]>([]);
+const pendingFiles = ref<PendingEvidenceItem[]>([]);
+const savedEvidence = ref<SavedEvidenceItem[]>([]);
 
 // ── Computed ─────────────────────────────────────────────────────
 const descLength = computed(() => form.value.description.length);
@@ -46,6 +56,8 @@ const isFormValid = computed(() => {
     form.value.incident_date !== ""
   );
 });
+const totalEvidenceCount = computed(() => pendingFiles.value.length + savedEvidence.value.length);
+const hasAnyEvidence = computed(() => totalEvidenceCount.value > 0);
 
 // ── Lifecycle ────────────────────────────────────────────────────
 onMounted(async () => {
@@ -54,20 +66,19 @@ onMounted(async () => {
     fraudTypes.value = await reportsApi.listFraudTypes();
 
     const draftIdParam = route.query.draft_id;
-    if (draftIdParam) {
-      const draftId = Number(draftIdParam);
-      if (!Number.isNaN(draftId) && draftId > 0) {
-        const draft = await reportsApi.getDraft(draftId);
-        currentDraftId.value = draft.draft_id;
-        form.value.title = draft.title ?? "";
-        form.value.description = draft.description ?? "";
-        form.value.fraud_type_id = draft.fraud_type_id ?? 0;
-        form.value.incident_date = draft.incident_date ?? "";
-        form.value.amount = draft.amount;
-        form.value.fraud_method = draft.fraud_method;
-        form.value.is_anonymous = draft.is_anonymous;
-        form.value.contact_way = draft.contact_way;
-      }
+    const draftId = Array.isArray(draftIdParam) ? draftIdParam[0] : draftIdParam;
+    if (draftId && /^\d+$/.test(draftId)) {
+      const draft = await reportsApi.getDraft(draftId);
+      currentDraftId.value = draft.draft_id;
+      form.value.title = draft.title ?? "";
+      form.value.description = draft.description ?? "";
+      form.value.fraud_type_id = draft.fraud_type_id ?? 0;
+      form.value.incident_date = draft.incident_date ?? "";
+      form.value.amount = draft.amount;
+      form.value.fraud_method = draft.fraud_method;
+      form.value.is_anonymous = draft.is_anonymous;
+      form.value.contact_way = draft.contact_way;
+      await hydrateSavedEvidence(draft.draft_id, draft.evidence_list ?? []);
     }
   } catch {
     errorMsg.value = "加载失败，请刷新页面重试";
@@ -76,13 +87,56 @@ onMounted(async () => {
   }
 });
 
+onBeforeUnmount(() => {
+  clearPendingPreviewUrls();
+  clearSavedPreviewUrls();
+});
+
 // ── File Handling ─────────────────────────────────────────────────
+function buildLocalId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function isImageMime(mimeType: string): boolean {
+  return mimeType.startsWith("image/");
+}
+
+function clearPendingPreviewUrls(): void {
+  for (const item of pendingFiles.value) {
+    if (item.preview_url) URL.revokeObjectURL(item.preview_url);
+  }
+}
+
+function clearSavedPreviewUrls(): void {
+  for (const item of savedEvidence.value) {
+    if (item.preview_url) URL.revokeObjectURL(item.preview_url);
+  }
+}
+
+async function hydrateSavedEvidence(draftId: string, evidenceList: EvidenceFileOut[]): Promise<void> {
+  clearSavedPreviewUrls();
+  savedEvidence.value = evidenceList.map((item) => ({
+    ...item,
+    preview_url: null,
+  }));
+
+  await Promise.all(savedEvidence.value.map(async (item) => {
+    if (!isImageMime(item.mime_type)) return;
+    try {
+      const blob = await reportsApi.getDraftEvidenceBlob(draftId, item.file_id);
+      item.preview_url = URL.createObjectURL(blob);
+    } catch {
+      item.preview_url = null;
+    }
+  }));
+}
+
 function handleFileChange(e: Event) {
   const input = e.target as HTMLInputElement;
   if (!input.files) return;
 
   for (const file of Array.from(input.files)) {
-    if (pendingFiles.value.length >= 10) {
+    if (totalEvidenceCount.value >= 10) {
       alert("最多上传 10 张图片");
       break;
     }
@@ -90,18 +144,33 @@ function handleFileChange(e: Event) {
       alert(`文件 ${file.name} 超过 5MB，已跳过`);
       continue;
     }
-    pendingFiles.value.push(file);
-    const url = URL.createObjectURL(file);
-    filePreviews.value.push(url);
+    pendingFiles.value.push({
+      local_id: buildLocalId(),
+      file,
+      preview_url: isImageMime(file.type) ? URL.createObjectURL(file) : null,
+    });
   }
   input.value = "";
 }
 
-function removeFile(index: number) {
-  const url = filePreviews.value[index];
-  if (url) URL.revokeObjectURL(url);
+function removePendingFile(index: number) {
+  const item = pendingFiles.value[index];
+  if (item?.preview_url) URL.revokeObjectURL(item.preview_url);
   pendingFiles.value.splice(index, 1);
-  filePreviews.value.splice(index, 1);
+}
+
+async function removeSavedFile(fileId: string): Promise<void> {
+  if (!currentDraftId.value) return;
+  const item = savedEvidence.value.find((entry) => entry.file_id === fileId);
+  if (!item) return;
+
+  try {
+    await reportsApi.deleteDraftEvidence(currentDraftId.value, fileId);
+    if (item.preview_url) URL.revokeObjectURL(item.preview_url);
+    savedEvidence.value = savedEvidence.value.filter((entry) => entry.file_id !== fileId);
+  } catch {
+    errorMsg.value = "删除草稿证据失败";
+  }
 }
 
 // ── Submit ────────────────────────────────────────────────────────
@@ -112,13 +181,23 @@ async function submitReport() {
   try {
     const result = await reportsApi.createReport(form.value);
 
-    // 上传证据图片
-    for (const file of pendingFiles.value) {
-      try {
+    if (currentDraftId.value) {
+      for (const item of savedEvidence.value) {
+        const blob = await reportsApi.getDraftEvidenceBlob(currentDraftId.value, item.file_id);
+        const file = new File([blob], item.original_name, {
+          type: blob.type || item.mime_type || "application/octet-stream",
+        });
         await reportsApi.uploadEvidence(result.case_id, file);
+      }
+    }
+
+    // 上传证据图片
+    for (const item of pendingFiles.value) {
+      try {
+        await reportsApi.uploadEvidence(result.case_id, item.file);
       } catch {
         // 证据上传失败不回滚，记录警告
-        console.warn(`证据上传失败: ${file.name}`);
+        console.warn(`证据上传失败: ${item.file.name}`);
       }
     }
 
@@ -157,11 +236,29 @@ async function saveDraft() {
       is_anonymous: form.value.is_anonymous,
       contact_way: form.value.contact_way ?? null,
     };
+    let draftId = currentDraftId.value;
     if (currentDraftId.value) {
       await reportsApi.updateDraft(currentDraftId.value, payload);
     } else {
       const draft = await reportsApi.createDraft(payload);
       currentDraftId.value = draft.draft_id;
+      draftId = draft.draft_id;
+    }
+
+    if (draftId) {
+      const stillPending: PendingEvidenceItem[] = [];
+      for (const item of pendingFiles.value) {
+        try {
+          const saved = await reportsApi.uploadDraftEvidence(draftId, item.file);
+          savedEvidence.value.push({
+            ...saved,
+            preview_url: item.preview_url,
+          });
+        } catch {
+          stillPending.push(item);
+        }
+      }
+      pendingFiles.value = stillPending;
     }
     alert("草稿已保存");
   } catch {
@@ -324,7 +421,7 @@ async function saveDraft() {
           <div class="report-form__upload-zone">
             <label
               class="report-form__upload-btn"
-              :class="{ 'disabled': pendingFiles.length >= 10 }"
+              :class="{ 'disabled': totalEvidenceCount >= 10 }"
             >
               <AppIcon
                 name="upload"
@@ -336,36 +433,81 @@ async function saveDraft() {
                 accept="image/*,.pdf"
                 multiple
                 style="display:none"
-                :disabled="pendingFiles.length >= 10"
+                :disabled="totalEvidenceCount >= 10"
                 @change="handleFileChange"
               >
             </label>
 
             <div
-              v-if="pendingFiles.length > 0"
+              v-if="hasAnyEvidence"
               class="report-form__previews"
             >
               <div
-                v-for="(url, idx) in filePreviews"
-                :key="idx"
+                v-for="item in savedEvidence"
+                :key="`saved-${item.file_id}`"
                 class="report-form__preview-item"
               >
                 <img
-                  :src="url"
-                  :alt="pendingFiles[idx]?.name ?? ''"
+                  v-if="item.preview_url"
+                  :src="item.preview_url"
+                  :alt="item.original_name"
                   class="report-form__preview-img"
                 >
+                <div
+                  v-else
+                  class="report-form__preview-placeholder"
+                >
+                  <AppIcon
+                    name="file-text"
+                    :size="20"
+                  />
+                </div>
                 <button
                   type="button"
                   class="report-form__preview-remove"
-                  @click="removeFile(idx)"
+                  @click="removeSavedFile(item.file_id)"
                 >
                   <AppIcon
                     name="x"
                     :size="12"
                   />
                 </button>
-                <span class="report-form__preview-name">{{ pendingFiles[idx]?.name ?? '' }}</span>
+                <span class="report-form__preview-name">{{ item.original_name }}</span>
+                <span class="report-form__preview-tag">已保存</span>
+              </div>
+
+              <div
+                v-for="(item, idx) in pendingFiles"
+                :key="item.local_id"
+                class="report-form__preview-item"
+              >
+                <img
+                  v-if="item.preview_url"
+                  :src="item.preview_url"
+                  :alt="item.file.name"
+                  class="report-form__preview-img"
+                >
+                <div
+                  v-else
+                  class="report-form__preview-placeholder"
+                >
+                  <AppIcon
+                    name="file-text"
+                    :size="20"
+                  />
+                </div>
+                <button
+                  type="button"
+                  class="report-form__preview-remove"
+                  @click="removePendingFile(idx)"
+                >
+                  <AppIcon
+                    name="x"
+                    :size="12"
+                  />
+                </button>
+                <span class="report-form__preview-name">{{ item.file.name }}</span>
+                <span class="report-form__preview-tag report-form__preview-tag--pending">待保存</span>
               </div>
             </div>
           </div>
@@ -672,6 +814,18 @@ async function saveDraft() {
   border: 1px solid var(--color-border);
 }
 
+.report-form__preview-placeholder {
+  width: 88px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-soft);
+  color: var(--color-text-secondary);
+}
+
 .report-form__preview-remove {
   position: absolute;
   top: 4px;
@@ -697,6 +851,17 @@ async function saveDraft() {
   text-overflow: ellipsis;
   white-space: nowrap;
   margin-top: 4px;
+}
+
+.report-form__preview-tag {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--color-success);
+}
+
+.report-form__preview-tag--pending {
+  color: var(--color-warning);
 }
 
 /* Checkbox */

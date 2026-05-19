@@ -4,7 +4,7 @@ import type { AuditLogOut, PaginationOut } from "@/types/api";
 export const auditApi = {
   async list(params: {
     op_type?: string;
-    operator_id?: number;
+    operator_id?: string;
     object_type?: string;
     object_id?: string;
     start?: string;

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infra.db.models.case_anonymous_reporter import CaseAnonymousReporter
@@ -63,15 +63,20 @@ class ReportRepository:
             await self._s.execute(select(FraudCase).where(FraudCase.case_no == case_no))
         ).scalar_one_or_none()
 
-    async def list_by_reporter(
+    async def list_by_student(
         self,
-        reporter_id: int,
+        student_id: int,
         *,
+        anonymous_case_ids: list[int] | None = None,
         status: str | None = None,
         offset: int = 0,
         limit: int = 20,
     ) -> tuple[list[FraudCase], int]:
-        q = select(FraudCase).where(FraudCase.reporter_id == reporter_id)
+        owner_filter = FraudCase.reporter_id == student_id
+        if anonymous_case_ids:
+            owner_filter = or_(owner_filter, FraudCase.case_id.in_(anonymous_case_ids))
+
+        q = select(FraudCase).where(owner_filter)
         if status:
             q = q.where(FraudCase.status == status)
         total_result = await self._s.execute(

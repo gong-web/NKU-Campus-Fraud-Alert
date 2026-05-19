@@ -14,7 +14,7 @@ export const usersApi = {
     return r.data;
   },
 
-  async get(userId: number): Promise<UserOut> {
+  async get(userId: string): Promise<UserOut> {
     const r = await http.get(`/api/v1/users/${userId}`);
     return r.data;
   },
@@ -27,7 +27,7 @@ export const usersApi = {
     return r.data;
   },
 
-  async patch(userId: number, body: UserUpdateIn): Promise<{ ok: boolean }> {
+  async patch(userId: string, body: UserUpdateIn): Promise<{ ok: boolean }> {
     const r = await http.patch(`/api/v1/users/${userId}`, body);
     return r.data;
   },

@@ -91,6 +91,18 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/admin/DashboardPage.vue"),
         meta: { title: "审核工作台" },
       },
+      {
+        path: "reports",
+        name: "admin-reports",
+        component: () => import("@/pages/admin/ReportListPage.vue"),
+        meta: { title: "审核队列" },
+      },
+      {
+        path: "reports/:case_id",
+        name: "admin-report-detail",
+        component: () => import("@/pages/admin/ReportDetailPage.vue"),
+        meta: { title: "案件审核详情" },
+      },
     ],
   },
   // ── 系统管理员 ───────────────────────────────────────────

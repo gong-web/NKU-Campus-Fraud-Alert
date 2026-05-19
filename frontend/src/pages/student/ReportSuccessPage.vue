@@ -7,7 +7,10 @@ const route = useRoute();
 const router = useRouter();
 
 const caseNo = computed(() => String(route.query.case_no ?? ""));
-const caseId = computed(() => Number(route.query.case_id ?? 0));
+const caseId = computed(() => {
+  const raw = Array.isArray(route.query.case_id) ? route.query.case_id[0] : route.query.case_id;
+  return typeof raw === "string" && /^\d+$/.test(raw) ? raw : "";
+});
 </script>
 
 <template>
@@ -57,7 +60,7 @@ const caseId = computed(() => Number(route.query.case_id ?? 0));
           查看我的上报
         </AppButton>
         <AppButton
-          v-if="caseId > 0"
+          v-if="caseId"
           variant="ghost"
           @click="router.push({ name: 'report-detail', params: { case_id: caseId } })"
         >

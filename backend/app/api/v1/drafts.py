@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import base64
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Response, UploadFile
 
 from app.api.deps import require_permission
 from app.domain.user_snapshot import UserSnapshot
@@ -105,3 +106,20 @@ async def delete_draft_evidence(
     current: Annotated[UserSnapshot, Depends(require_permission(perm.REPORT_CREATE))],
 ) -> None:
     await report_service.delete_draft_evidence(draft_id, file_id, current=current)
+
+
+@router.get(
+    "/{draft_id}/evidence/{file_id}",
+    summary="读取草稿的某张证据",
+)
+async def get_draft_evidence(
+    draft_id: int,
+    file_id: int,
+    current: Annotated[UserSnapshot, Depends(require_permission(perm.REPORT_CREATE))],
+) -> Response:
+    access = await report_service.get_draft_evidence_content(draft_id, file_id, current=current)
+    return Response(
+        content=base64.b64decode(access.content_base64),
+        media_type=access.mime_type,
+        headers={"Content-Disposition": f'inline; filename="{access.original_name}"'},
+    )

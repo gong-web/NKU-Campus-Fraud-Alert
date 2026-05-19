@@ -28,7 +28,7 @@ class CaseStatus:
     # 合法流转映射：key → 可流转到的目标集合（由 UC-06 状态机校验）
     TRANSITIONS: dict[str | None, frozenset[str]] = {
         None: frozenset({PENDING}),
-        PENDING: frozenset({REVIEWING, REJECTED}),
+        PENDING: frozenset({REVIEWING}),
         REVIEWING: frozenset({HANDLED, REJECTED, REPORTED}),
         HANDLED: frozenset(),
         REJECTED: frozenset(),

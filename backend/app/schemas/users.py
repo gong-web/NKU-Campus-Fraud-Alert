@@ -10,9 +10,9 @@ from app.infra.db.models.user import UserStatus
 
 
 class UserOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, coerce_numbers_to_str=True)
 
-    user_id: int
+    user_id: str
     cas_account: str
     real_name: str
     department_id: int

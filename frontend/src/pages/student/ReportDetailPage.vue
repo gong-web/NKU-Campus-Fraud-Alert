@@ -7,7 +7,7 @@ import { AppButton, AppCard, AppIcon, AppPageHeader } from "@/components";
 
 const route = useRoute();
 const router = useRouter();
-const caseId = Number(route.params.case_id);
+const caseId = String(route.params.case_id ?? "");
 
 const loading = ref(true);
 const detail = ref<ReportDetailOut | null>(null);
@@ -23,6 +23,9 @@ const STATUS_ICON: Record<string, string> = {
 
 onMounted(async () => {
   try {
+    if (!/^\d+$/.test(caseId)) {
+      throw new Error("invalid-case-id");
+    }
     detail.value = await reportsApi.getReport(caseId);
   } catch {
     error.value = "案件不存在或无权查看";

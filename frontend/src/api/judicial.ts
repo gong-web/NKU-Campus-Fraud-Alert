@@ -11,7 +11,7 @@ export const judicialApi = {
     return r.data;
   },
 
-  async reveal(decryptLogId: number): Promise<JudicialDecryptOut> {
+  async reveal(decryptLogId: string): Promise<JudicialDecryptOut> {
     const r = await http.get(`/api/v1/judicial-assist/${decryptLogId}/reveal`);
     return r.data;
   },

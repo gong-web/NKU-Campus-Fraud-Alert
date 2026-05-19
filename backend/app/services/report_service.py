@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import base64
 from datetime import UTC, datetime, timedelta
 from typing import ClassVar
 
 from fastapi import UploadFile
+from sqlalchemy import select
 
 from app.core.ids import make_case_no
 from app.core.logging import get_logger
-from app.core.security import encrypt_field
+from app.core.security import decrypt_field, encrypt_field
 from app.core.snowflake import next_snowflake_id
 from app.domain.user_snapshot import UserSnapshot
 from app.exceptions import AppException, PermissionDenied
@@ -27,6 +29,7 @@ from app.infra.repositories.report import (
     ReportRepository,
 )
 from app.schemas.reports import (
+    EvidenceAccessOut,
     DraftOut,
     DraftSaveIn,
     EvidenceFileOut,
@@ -42,6 +45,7 @@ from app.services.storage_service import (
     MAX_FILE_SIZE,
     MAX_FILES_PER_CASE,
     delete_evidence_file,
+    read_evidence_file,
     save_evidence_file,
 )
 
@@ -190,6 +194,7 @@ async def upload_evidence(
     调用方需要持有 report:create 权限且是该案件的上报人（或管理员）。
     文件经 AES-256-GCM 加密后写入本地磁盘。
     """
+    evidence_out: EvidenceFileOut | None = None
     async with uow() as session:
         report_repo = ReportRepository(session)
         evidence_repo = EvidenceRepository(session)
@@ -199,7 +204,7 @@ async def upload_evidence(
             raise BusinessError("案件不存在", code=404)
 
         # 权限：非匿名案件的上报人 或 拥有 report:review 权限的审核员
-        is_own = not case.is_anonymous and case.reporter_id == current.user_id
+        is_own = await _is_case_owner(session, case=case, current=current)
         if not is_own and current.role_code not in {"REVIEWER", "SYS_ADMIN"}:
             raise PermissionDenied("只能为自己的案件上传证据")
 
@@ -239,6 +244,9 @@ async def upload_evidence(
             uploaded_by=current.user_id,
         )
         await evidence_repo.add(ev)
+        await session.flush()
+        await session.refresh(ev)
+        evidence_out = EvidenceFileOut.model_validate(ev)
 
     audit = get_audit_service()
     await audit.write(
@@ -249,7 +257,8 @@ async def upload_evidence(
         after={"case_id": case_id, "mime": mime, "size": len(content)},
     )
     logger.info("evidence_uploaded", case_id=case_id, file_id=file_id, size=len(content))
-    return EvidenceFileOut.model_validate(ev)
+    assert evidence_out is not None
+    return evidence_out
 
 
 # ── 我的上报 ─────────────────────────────────────────────────────────
@@ -265,9 +274,14 @@ async def list_my_reports(
     async with uow() as session:
         report_repo = ReportRepository(session)
         fraud_type_repo = FraudTypeRepository(session)
+        anonymous_case_ids = await _list_anonymous_case_ids_for_user(session, current.user_id)
 
-        cases, total = await report_repo.list_by_reporter(
-            current.user_id, status=status, offset=offset, limit=size
+        cases, total = await report_repo.list_by_student(
+            current.user_id,
+            anonymous_case_ids=anonymous_case_ids,
+            status=status,
+            offset=offset,
+            limit=size,
         )
 
         # 批量获取 fraud_type 名称
@@ -315,7 +329,7 @@ async def get_report_detail(
             raise BusinessError("案件不存在", code=404)
 
         # 权限：只能看自己的案件（除非是审核员）
-        is_own = not case.is_anonymous and case.reporter_id == current.user_id
+        is_own = await _is_case_owner(session, case=case, current=current)
         if not is_own and current.role_code not in {"REVIEWER", "SYS_ADMIN"}:
             raise PermissionDenied("无权查看此案件")
 
@@ -384,7 +398,7 @@ async def create_draft(
             expires_at=now + timedelta(days=_DRAFT_TTL_DAYS),
         )
         await draft_repo.add(draft)
-        ev_count = await evidence_repo.count_by_draft(draft.draft_id)
+        evidence_list = await evidence_repo.list_by_draft(draft.draft_id)
 
     audit = get_audit_service()
     await audit.write(
@@ -394,7 +408,7 @@ async def create_draft(
         obj_id=str(draft.draft_id),
         after={"title": (data.title or "")[:80]},
     )
-    return _draft_to_out(draft, evidence_count=ev_count)
+    return _draft_to_out(draft, evidence_list=evidence_list)
 
 
 async def update_draft(
@@ -425,7 +439,7 @@ async def update_draft(
         draft.expires_at = datetime.now(tz=UTC) + timedelta(days=_DRAFT_TTL_DAYS)
 
         await session.flush()
-        ev_count = await evidence_repo.count_by_draft(draft_id)
+        evidence_list = await evidence_repo.list_by_draft(draft_id)
 
     audit = get_audit_service()
     await audit.write(
@@ -435,7 +449,7 @@ async def update_draft(
         obj_id=str(draft_id),
         after={"title": (data.title or "")[:80]},
     )
-    return _draft_to_out(draft, evidence_count=ev_count)
+    return _draft_to_out(draft, evidence_list=evidence_list)
 
 
 async def get_draft(draft_id: int, *, current: UserSnapshot) -> DraftOut:
@@ -449,9 +463,9 @@ async def get_draft(draft_id: int, *, current: UserSnapshot) -> DraftOut:
         if draft.student_id != current.user_id:
             raise PermissionDenied("无权查看他人草稿")
 
-        ev_count = await evidence_repo.count_by_draft(draft_id)
+        evidence_list = await evidence_repo.list_by_draft(draft_id)
 
-    return _draft_to_out(draft, evidence_count=ev_count)
+    return _draft_to_out(draft, evidence_list=evidence_list)
 
 
 async def list_drafts(*, current: UserSnapshot) -> list[DraftOut]:
@@ -462,8 +476,8 @@ async def list_drafts(*, current: UserSnapshot) -> list[DraftOut]:
         drafts = await draft_repo.list_by_student(current.user_id)
         results = []
         for d in drafts:
-            ev_count = await evidence_repo.count_by_draft(d.draft_id)
-            results.append(_draft_to_out(d, evidence_count=ev_count))
+            evidence_list = await evidence_repo.list_by_draft(d.draft_id)
+            results.append(_draft_to_out(d, evidence_list=evidence_list))
 
     return results
 
@@ -502,7 +516,7 @@ async def upload_draft_evidence(
     *,
     current: UserSnapshot,
 ) -> EvidenceFileOut:
-    """为草稿上传证据图片。"""
+    evidence_out: EvidenceFileOut | None = None
     async with uow() as session:
         draft_repo = DraftRepository(session)
         evidence_repo = EvidenceRepository(session)
@@ -546,6 +560,9 @@ async def upload_draft_evidence(
             uploaded_by=current.user_id,
         )
         await evidence_repo.add(ev)
+        await session.flush()
+        await session.refresh(ev)
+        evidence_out = EvidenceFileOut.model_validate(ev)
 
     audit = get_audit_service()
     await audit.write(
@@ -555,7 +572,8 @@ async def upload_draft_evidence(
         obj_id=str(file_id),
         after={"draft_id": draft_id, "mime": mime, "size": len(content)},
     )
-    return EvidenceFileOut.model_validate(ev)
+    assert evidence_out is not None
+    return evidence_out
 
 
 async def delete_draft_evidence(
@@ -582,10 +600,68 @@ async def delete_draft_evidence(
         await evidence_repo.delete(ev)
 
 
+async def get_draft_evidence_content(
+    draft_id: int,
+    file_id: int,
+    *,
+    current: UserSnapshot,
+) -> EvidenceAccessOut:
+    async with uow() as session:
+        draft_repo = DraftRepository(session)
+        evidence_repo = EvidenceRepository(session)
+
+        draft = await draft_repo.get_by_id(draft_id)
+        if draft is None:
+            raise BusinessError("草稿不存在", code=404)
+        if draft.student_id != current.user_id:
+            raise PermissionDenied("无权查看他人草稿证据")
+
+        ev = await evidence_repo.get_by_id(file_id)
+        if ev is None or ev.draft_id != draft_id:
+            raise BusinessError("文件不存在", code=404)
+
+        raw = await read_evidence_file(ev.storage_path)
+
+    return EvidenceAccessOut(
+        file_id=ev.file_id,
+        original_name=ev.original_name,
+        mime_type=ev.mime_type,
+        content_base64=base64.b64encode(raw).decode("ascii"),
+    )
+
+
 # ── 内部工具 ──────────────────────────────────────────────────────────
-def _draft_to_out(draft: ReportDraft, *, evidence_count: int) -> DraftOut:
+async def _list_anonymous_case_ids_for_user(session, user_id: int) -> list[int]:
+    rows = (await session.execute(select(CaseAnonymousReporter))).scalars().all()
+    case_ids: list[int] = []
+    for row in rows:
+        try:
+            if int(decrypt_field(row.reporter_user_id_enc).decode("utf-8")) == user_id:
+                case_ids.append(row.case_id)
+        except Exception:
+            logger.warning("anonymous_mapping_decrypt_failed", case_id=row.case_id)
+    return case_ids
+
+
+async def _is_case_owner(session, *, case: FraudCase, current: UserSnapshot) -> bool:
+    if not case.is_anonymous:
+        return case.reporter_id == current.user_id
+
+    mapping_stmt = select(CaseAnonymousReporter).where(CaseAnonymousReporter.case_id == case.case_id)
+    mapping = (await session.execute(mapping_stmt)).scalar_one_or_none()
+    if mapping is None:
+        return False
+
+    try:
+        return int(decrypt_field(mapping.reporter_user_id_enc).decode("utf-8")) == current.user_id
+    except Exception:
+        logger.warning("anonymous_mapping_decrypt_failed", case_id=case.case_id)
+        return False
+
+
+def _draft_to_out(draft: ReportDraft, *, evidence_list: list[EvidenceFile]) -> DraftOut:
     return DraftOut(
-        draft_id=draft.draft_id,
+        draft_id=str(draft.draft_id),
         title=draft.title,
         description=draft.description,
         fraud_type_id=draft.fraud_type_id,
@@ -597,5 +673,6 @@ def _draft_to_out(draft: ReportDraft, *, evidence_count: int) -> DraftOut:
         created_at=draft.created_at,
         updated_at=draft.updated_at,
         expires_at=draft.expires_at,
-        evidence_count=evidence_count,
+        evidence_count=len(evidence_list),
+        evidence_list=[EvidenceFileOut.model_validate(ev) for ev in evidence_list],
     )

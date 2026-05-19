@@ -3,7 +3,7 @@
  */
 
 export interface WhoAmI {
-  user_id: number;
+  user_id: string;
   cas_account: string;
   real_name: string;
   role_id: number;
@@ -21,7 +21,7 @@ export interface PaginationOut<T> {
 }
 
 export interface UserOut {
-  user_id: number;
+  user_id: string;
   cas_account: string;
   real_name: string;
   department_id: number;
@@ -47,8 +47,8 @@ export interface UserUpdateIn {
 }
 
 export interface AuditLogOut {
-  log_id: number;
-  operator_id: number;
+  log_id: string;
+  operator_id: string;
   operation_type: string;
   object_type: string;
   object_id: string;
@@ -60,21 +60,21 @@ export interface AuditLogOut {
 }
 
 export interface JudicialDecryptRequestIn {
-  report_id: number;
+  report_id: string;
   judicial_doc_no: string;
   reason: string;
   related_case_no?: string | undefined;
 }
 
 export interface JudicialDecryptRequestOut {
-  decrypt_log_id: number;
+  decrypt_log_id: string;
   expires_at: string;
   window_seconds: number;
 }
 
 export interface JudicialDecryptOut {
-  report_id: number;
-  user_id: number;
+  report_id: string;
+  user_id: string;
   real_name: string;
   cas_account: string;
   watermark_text: string;

@@ -13,6 +13,7 @@
 """
 
 from app.infra.db.models.anonymous_decrypt_log import AnonymousDecryptLog
+from app.infra.db.models.aggregate_alert_log import AggregateAlertLog
 
 # 司法协助
 from app.infra.db.models.anonymous_mapping import AnonymousMapping
@@ -25,6 +26,7 @@ from app.infra.db.models.department import Department
 from app.infra.db.models.evidence_file import EvidenceFile
 from app.infra.db.models.fraud_case import FraudCase
 from app.infra.db.models.fraud_type import FraudType
+from app.infra.db.models.knowledge_draft import KnowledgeDraft
 from app.infra.db.models.notification import Notification
 from app.infra.db.models.permission import Permission
 from app.infra.db.models.report_draft import ReportDraft
@@ -36,6 +38,7 @@ from app.infra.db.models.user import User
 
 __all__ = [
     "AnonymousDecryptLog",
+    "AggregateAlertLog",
     "AnonymousMapping",
     "AuditLog",
     "CaseAnonymousReporter",
@@ -44,6 +47,7 @@ __all__ = [
     "EvidenceFile",
     "FraudCase",
     "FraudType",
+    "KnowledgeDraft",
     "Notification",
     "Permission",
     "ReportDraft",

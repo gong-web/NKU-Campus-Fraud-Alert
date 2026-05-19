@@ -19,7 +19,7 @@ const form = reactive({
   related_case_no: "",
 });
 const submitting = ref<boolean>(false);
-const decryptLogId = ref<number | null>(null);
+const decryptLogId = ref<string | null>(null);
 const expiresAt = ref<string>("");
 const remaining = ref<number>(0);
 const reveal = ref<JudicialDecryptOut | null>(null);
@@ -53,9 +53,9 @@ async function submit(): Promise<void> {
   showConfirm.value = false;
   submitting.value = true;
   try {
-    const reportId = Number(form.report_id);
-    if (!Number.isFinite(reportId) || reportId <= 0) {
-      error.value = "report_id 必须是正整数";
+    const reportId = form.report_id.trim();
+    if (!/^\d+$/.test(reportId)) {
+      error.value = "report_id 必须是正整数数字串";
       submitting.value = false;
       return;
     }
