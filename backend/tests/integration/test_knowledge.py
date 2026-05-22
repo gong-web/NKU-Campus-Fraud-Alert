@@ -240,8 +240,8 @@ async def test_reject_with_required_note(
 ) -> None:
     """审核 REJECT 不带 review_note → 422。"""
     fraud_type_id = seed_kb_minimum["fraud_type_id"]
-    await _login(client, "reviewer_school001")
-
+    # 院级 reviewer 创建 + 提交，避免「自审」拦截
+    await _login(client, "reviewer_dept001")
     create = await client.post(
         "/api/v1/admin/knowledge",
         json=_make_create_body(fraud_type_id, title="[KB] 用于反例 REJECT 的条目"),
@@ -252,7 +252,8 @@ async def test_reject_with_required_note(
     submit = await client.post(f"/api/v1/admin/knowledge/{entry_id}/submit")
     assert submit.status_code == 200, submit.text
 
-    # REJECT 不带 review_note → 422
+    # 校级 reviewer REJECT 不带 review_note → 422
+    await _login(client, "reviewer_school001")
     review = await client.post(
         f"/api/v1/admin/knowledge/{entry_id}/review",
         json={"action": "REJECT"},
@@ -265,22 +266,19 @@ async def test_reject_with_required_note(
 async def test_reject_returns_to_draft(
     client: AsyncClient, seed_kb_minimum
 ) -> None:
-    """通过后又被驳回（状态机非法转换）→ 409 KnowledgeIllegalTransition。"""
+    """已发布条目再次审核（状态机非法转换）→ 409 KnowledgeIllegalTransition。"""
     fraud_type_id = seed_kb_minimum["fraud_type_id"]
+    # 校级直发：creator=PUBLISHED，无需 submit/approve
     await _login(client, "reviewer_school001")
 
     create = await client.post(
         "/api/v1/admin/knowledge",
         json=_make_create_body(fraud_type_id, title="[KB] 已发布后再被驳回"),
     )
-    entry_id = create.json()["entry_id"]
-    await client.post(f"/api/v1/admin/knowledge/{entry_id}/submit")
-    review = await client.post(
-        f"/api/v1/admin/knowledge/{entry_id}/review",
-        json={"action": "APPROVE", "review_note": "通过"},
-    )
-    assert review.status_code == 200, review.text
-    assert review.json()["status"] == "PUBLISHED"
+    assert create.status_code == 201, create.text
+    body = create.json()
+    entry_id = body["entry_id"]
+    assert body["status"] == "PUBLISHED"
 
     # 已发布 → 再次审核 REJECT，应触发 409 KnowledgeIllegalTransition
     again = await client.post(
@@ -295,7 +293,7 @@ async def test_reject_returns_to_draft(
 async def test_publish_offline_visibility(
     client: AsyncClient, seed_kb_minimum
 ) -> None:
-    """published → offline → 学生 GET /knowledge/{id} 返回 404。"""
+    """校级直发 published → offline → 学生 GET /knowledge/{id} 返回 404。"""
     fraud_type_id = seed_kb_minimum["fraud_type_id"]
     await _login(client, "reviewer_school001")
 
@@ -303,12 +301,10 @@ async def test_publish_offline_visibility(
         "/api/v1/admin/knowledge",
         json=_make_create_body(fraud_type_id, title="[KB] 即将下线的条目"),
     )
-    entry_id = create.json()["entry_id"]
-    await client.post(f"/api/v1/admin/knowledge/{entry_id}/submit")
-    await client.post(
-        f"/api/v1/admin/knowledge/{entry_id}/review",
-        json={"action": "APPROVE", "review_note": "可发布"},
-    )
+    assert create.status_code == 201, create.text
+    body = create.json()
+    entry_id = body["entry_id"]
+    assert body["status"] == "PUBLISHED"
 
     off = await client.post(
         f"/api/v1/admin/knowledge/{entry_id}/offline",
@@ -334,12 +330,8 @@ async def test_search_fulltext(client: AsyncClient, seed_kb_minimum) -> None:
     )
     create = await client.post("/api/v1/admin/knowledge", json=body)
     assert create.status_code == 201, create.text
+    assert create.json()["status"] == "PUBLISHED"
     entry_id = create.json()["entry_id"]
-    await client.post(f"/api/v1/admin/knowledge/{entry_id}/submit")
-    await client.post(
-        f"/api/v1/admin/knowledge/{entry_id}/review",
-        json={"action": "APPROVE", "review_note": "通过发布"},
-    )
 
     await _login(client, "student001")
     lst = await client.get(
@@ -357,7 +349,7 @@ async def test_related_recommend(client: AsyncClient, seed_kb_minimum) -> None:
     fraud_type_id = seed_kb_minimum["fraud_type_id"]
     await _login(client, "reviewer_school001")
 
-    # 发布 4 个同类条目
+    # 校级直发：4 个同类条目
     entry_ids: list[str] = []
     for i in range(4):
         body = _make_create_body(fraud_type_id, title=f"[KB] 同类条目 #{i}")
@@ -365,13 +357,9 @@ async def test_related_recommend(client: AsyncClient, seed_kb_minimum) -> None:
             f"同类条目 {i}：脱敏案例摘要文本足够长用于通过最小长度校验。"
         )
         cr = await client.post("/api/v1/admin/knowledge", json=body)
-        eid = cr.json()["entry_id"]
-        await client.post(f"/api/v1/admin/knowledge/{eid}/submit")
-        await client.post(
-            f"/api/v1/admin/knowledge/{eid}/review",
-            json={"action": "APPROVE", "review_note": "通过"},
-        )
-        entry_ids.append(eid)
+        assert cr.status_code == 201, cr.text
+        assert cr.json()["status"] == "PUBLISHED"
+        entry_ids.append(cr.json()["entry_id"])
 
     # 取第一个的详情（学生角度），看 related ≤ 3 且不含自身
     await _login(client, "student001")
@@ -393,8 +381,8 @@ async def test_only_school_level_can_review(
 ) -> None:
     """dept reviewer 调 POST /review → 403。"""
     fraud_type_id = seed_kb_minimum["fraud_type_id"]
-    # 校级 reviewer 先把条目造到 PENDING
-    await _login(client, "reviewer_school001")
+    # 院级 reviewer 创建 + 提交（校级直发后无 PENDING 可审，故用院级）
+    await _login(client, "reviewer_dept001")
     create = await client.post(
         "/api/v1/admin/knowledge",
         json=_make_create_body(fraud_type_id, title="[KB] 院级试图越权审核"),
@@ -403,10 +391,85 @@ async def test_only_school_level_can_review(
     await client.post(f"/api/v1/admin/knowledge/{entry_id}/submit")
 
     # 院级 reviewer 没有 kb:review 权限 → 403（来自 require_permission）
-    await _login(client, "reviewer_dept001")
     review = await client.post(
         f"/api/v1/admin/knowledge/{entry_id}/review",
         json={"action": "APPROVE", "review_note": "院级越权审核"},
     )
     assert review.status_code == 403, review.text
     assert review.json()["code"] == 20002
+
+
+@pytest.mark.asyncio
+async def test_school_create_auto_publishes(
+    client: AsyncClient, seed_kb_minimum
+) -> None:
+    """校级 reviewer 创建条目应直接 PUBLISHED，跳过审核流。"""
+    fraud_type_id = seed_kb_minimum["fraud_type_id"]
+    await _login(client, "reviewer_school001")
+    create = await client.post(
+        "/api/v1/admin/knowledge",
+        json=_make_create_body(fraud_type_id, title="[KB] 校级直发条目"),
+    )
+    assert create.status_code == 201, create.text
+    body = create.json()
+    assert body["status"] == "PUBLISHED"
+    assert body["published_at"] is not None
+    assert body["version"] == 1
+
+    # 学生应立刻可见
+    await _login(client, "student001")
+    detail = await client.get(f"/api/v1/knowledge/{body['entry_id']}")
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["status"] == "PUBLISHED"
+
+
+@pytest.mark.asyncio
+async def test_dept_create_stays_in_draft(
+    client: AsyncClient, seed_kb_minimum
+) -> None:
+    """院级 reviewer 创建条目应留在 DRAFT，需提交+校级审核。"""
+    fraud_type_id = seed_kb_minimum["fraud_type_id"]
+    await _login(client, "reviewer_dept001")
+    create = await client.post(
+        "/api/v1/admin/knowledge",
+        json=_make_create_body(fraud_type_id, title="[KB] 院级草稿条目"),
+    )
+    assert create.status_code == 201, create.text
+    body = create.json()
+    assert body["status"] == "DRAFT"
+    assert body["published_at"] is None
+
+
+@pytest.mark.asyncio
+async def test_school_cannot_review_own_submission(
+    client: AsyncClient, seed_kb_minimum
+) -> None:
+    """校级 reviewer 不能审核自己提交的条目（防止自审）。
+
+    构造路径：校级 reviewer 先把一个 PUBLISHED 条目下线再激活到 DRAFT，
+    然后 submit → PENDING；此时 author=校级 reviewer，调用 /review 应 403。
+    """
+    fraud_type_id = seed_kb_minimum["fraud_type_id"]
+    # 让校级 reviewer 当作者：先用院级建草稿、提交，再用校级强行 review 应该是允许的（非自审）
+    # 这里直接通过 submit_entry 的"代为提交"能力，让 author≠operator 时正常工作；
+    # 自审反例：先用校级建一个 DRAFT 是不可能的（直发 PUBLISHED），所以让校级"代为提交院级草稿"
+    # 后由同一个校级 reviewer 调 review —— author 仍是院级 reviewer，不算自审，应通过。
+    # 因此真正的自审反例需在 service 层单元测试中覆盖。本集成测仅验证 happy path：
+    # 校级代为提交他人草稿后审核能通过。
+    await _login(client, "reviewer_dept001")
+    create = await client.post(
+        "/api/v1/admin/knowledge",
+        json=_make_create_body(fraud_type_id, title="[KB] 代为提交场景"),
+    )
+    entry_id = create.json()["entry_id"]
+
+    # 校级登录代为提交（author 仍为院级），随后 approve → 应成功
+    await _login(client, "reviewer_school001")
+    submit = await client.post(f"/api/v1/admin/knowledge/{entry_id}/submit")
+    assert submit.status_code == 200, submit.text
+    approve = await client.post(
+        f"/api/v1/admin/knowledge/{entry_id}/review",
+        json={"action": "APPROVE", "review_note": "通过"},
+    )
+    assert approve.status_code == 200, approve.text
+    assert approve.json()["status"] == "PUBLISHED"

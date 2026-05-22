@@ -72,9 +72,17 @@ async def create_entry(
     *,
     current: UserSnapshot,
 ) -> KnowledgeOut:
-    """新建知识库条目（草稿态）。"""
+    """新建知识库条目。
+
+    - 院系 reviewer（``role_level=1``）创建：``DRAFT`` 状态，需提交校级审核。
+    - 校级 reviewer（``role_level=2``）创建：直接 ``PUBLISHED``，自动跳过审核
+      （PRD UC-08 — 校方拥有最终发布权，毋须再走自审流程）。
+    """
     async with uow() as session:
         await _ensure_fraud_type_exists(session, body.fraud_type_id)
+
+        is_school = await _is_school_reviewer(session, current)
+        now = datetime.now(tz=UTC)
 
         repo = KnowledgeRepository(session)
         entry = KnowledgeEntry(
@@ -87,12 +95,13 @@ async def create_entry(
             peak_periods=body.peak_periods,
             source_type=body.source_type,
             source_reference=body.source_reference,
-            status=KnowledgeEntryStatus.DRAFT,
+            status=KnowledgeEntryStatus.PUBLISHED if is_school else KnowledgeEntryStatus.DRAFT,
             version=1,
             author_id=current.user_id,
-            reviewer_id=None,
+            reviewer_id=current.user_id if is_school else None,
             review_note=None,
             source_draft_id=None,
+            published_at=now if is_school else None,
         )
         await repo.add_entry(entry)
 
@@ -102,10 +111,18 @@ async def create_entry(
             action=KnowledgeEntryHistoryAction.CREATE,
             modified_by=current.user_id,
         )
+        if is_school:
+            # 校级直发：补一条 APPROVE 历史，使审计链与「DRAFT→PENDING→PUBLISHED」等价
+            await _append_history(
+                session,
+                entry=entry,
+                action=KnowledgeEntryHistoryAction.APPROVE,
+                modified_by=current.user_id,
+            )
 
         await get_audit_service().write(
             operator=current,
-            op_type="KB_DRAFT_CREATE",
+            op_type="KB_PUBLISH_DIRECT" if is_school else "KB_DRAFT_CREATE",
             obj_type="knowledge_entry",
             obj_id=str(entry.entry_id),
             after={"title": entry.title, "status": entry.status, "version": entry.version},
@@ -192,6 +209,10 @@ async def review_entry(
 
         # 业务校验：必须校级（role_level==2）reviewer
         await _ensure_school_reviewer_or_raise(session, current)
+
+        # 防止自审：作者本人不得审核自己提交的条目（PRD UC-08 — 利益冲突）
+        if entry.author_id == current.user_id:
+            raise PermissionDenied("不可审核自己提交的条目")
 
         if entry.status != KnowledgeEntryStatus.PENDING:
             raise KnowledgeIllegalTransition("仅 PENDING 状态条目可审核")

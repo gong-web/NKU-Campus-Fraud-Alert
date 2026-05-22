@@ -42,9 +42,10 @@ def main() -> None:
     print("=== UC-03/04/07/08 end-to-end smoke ===")
 
     school = httpx.Client(timeout=15.0)
+    dept = httpx.Client(timeout=15.0)
     student = httpx.Client(timeout=15.0)
 
-    # 1. Login school reviewer (role_level=2 → can create/review/offline KB + publish warnings)
+    # 1. Login school reviewer (role_level=2 → can review/offline KB + publish warnings)
     print("\n[1] Login: reviewer_school001")
     me_school = login(school, "reviewer_school001")
     school_user_id = me_school["user_id"]
@@ -53,9 +54,12 @@ def main() -> None:
     me_student = login(student, "student001")
     _ = me_student
 
-    # ── 2. KB CREATE ───────────────────────────────────────────────
-    print("\n[2] POST /admin/knowledge -> create DRAFT")
-    r = school.post(
+    print("\n[1c] Login: reviewer_dept001 (院系级，新建只能进 DRAFT)")
+    login(dept, "reviewer_dept001")
+
+    # ── 2. KB CREATE (院系级 → DRAFT) ───────────────────────────────
+    print("\n[2] POST /admin/knowledge by reviewer_dept001 -> create DRAFT")
+    r = dept.post(
         f"{BASE}/admin/knowledge",
         headers=HEADERS,
         json={
@@ -73,12 +77,12 @@ def main() -> None:
     entry = r.json()
     entry_id = entry["entry_id"]
     print(f"  entry_id={entry_id} status={entry['status']} version={entry['version']}")
-    check(entry["status"] == "DRAFT", "initial status DRAFT")
+    check(entry["status"] == "DRAFT", "院系级新建初始状态 DRAFT")
     check(entry["version"] == 1, "initial version=1")
 
-    # ── 3. SUBMIT ───────────────────────────────────────────────────
-    print("\n[3] POST /admin/knowledge/{id}/submit -> PENDING")
-    r = school.post(f"{BASE}/admin/knowledge/{entry_id}/submit", headers=HEADERS)
+    # ── 3. SUBMIT (作者本人 dept) ────────────────────────────────────
+    print("\n[3] POST /admin/knowledge/{id}/submit by author -> PENDING")
+    r = dept.post(f"{BASE}/admin/knowledge/{entry_id}/submit", headers=HEADERS)
     check(r.status_code == 200, f"submit -> 200 (got {r.status_code}: {r.text[:300]})")
     check(r.json()["status"] == "PENDING", "post-submit status PENDING")
 
@@ -197,8 +201,8 @@ def main() -> None:
     check(r.status_code == 404, f"missing entry -> 404 (got {r.status_code})")
 
     print("\n[17] Failure: REJECT without review_note -> 4xx")
-    # Build a brand-new DRAFT then submit, then reject without note
-    r = school.post(
+    # 院系级先建草稿+提交，再用校级 REJECT 触发缺 review_note 校验
+    r = dept.post(
         f"{BASE}/admin/knowledge",
         headers=HEADERS,
         json={
@@ -212,7 +216,7 @@ def main() -> None:
     )
     check(r.status_code == 201, f"create reject-test entry -> 201 (got {r.status_code})")
     bad_id = r.json()["entry_id"]
-    r = school.post(f"{BASE}/admin/knowledge/{bad_id}/submit", headers=HEADERS)
+    r = dept.post(f"{BASE}/admin/knowledge/{bad_id}/submit", headers=HEADERS)
     check(r.status_code == 200, f"submit reject-test entry -> 200 (got {r.status_code})")
     r = school.post(
         f"{BASE}/admin/knowledge/{bad_id}/review",
@@ -220,6 +224,25 @@ def main() -> None:
         json={"action": "REJECT"},  # no review_note
     )
     check(r.status_code in (400, 422), f"REJECT-without-note -> 4xx (got {r.status_code}: {r.text[:200]})")
+
+    # ── 18. SCHOOL-LEVEL DIRECT PUBLISH ─────────────────────────────
+    print("\n[18] 校级 reviewer 新建 -> 直接 PUBLISHED（跳过 PENDING）")
+    r = school.post(
+        f"{BASE}/admin/knowledge",
+        headers=HEADERS,
+        json={
+            "title": "[smoke] 校级直发条目",
+            "fraud_type_id": 1,
+            "desensitized_summary": "校方公告：近期某类诈骗手法（脱敏摘要文本，至少 20 字）。",
+            "identification_points": "1. 来源不明；2. 诱导转账；3. 紧迫话术。",
+            "prevention_advice": "1. 不轻信；2. 多核实；3. 拨打 96110。",
+            "source_type": "SCHOOL",
+        },
+    )
+    check(r.status_code == 201, f"school create -> 201 (got {r.status_code}: {r.text[:300]})")
+    direct = r.json()
+    check(direct["status"] == "PUBLISHED", "校级新建直接 PUBLISHED")
+    check(direct.get("published_at") is not None, "校级直发 published_at 已写入")
 
     print("\n=== ALL CHECKS PASSED ===")
     print(json.dumps({
