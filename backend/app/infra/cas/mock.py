@@ -38,9 +38,17 @@ class MockCASProvider(AuthProvider):
             raise CASTicketInvalid("Mock CAS: 票据为空")
         if len(ticket) > 64:
             raise CASTicketInvalid("Mock CAS: 票据过长（疑似异常）")
-        cas_account = ticket.strip()
-        if not cas_account.isascii() or not cas_account.replace("_", "").isalnum():
+        # 支持 ``account`` 或 ``account__<nonce>`` 两种形式：
+        # - 直接 ``account``：旧的"账号即票据"用法（手填、回归测试）
+        # - ``account__<nonce>``：``mock_login`` 端点用，用 nonce 绕过重放保护
+        raw = ticket.strip()
+        cas_account = raw.split("__", 1)[0]
+        if not cas_account:
+            raise CASTicketInvalid("Mock CAS: 票据 account 段为空")
+        if not raw.isascii() or not raw.replace("_", "").isalnum():
             raise CASTicketInvalid("Mock CAS: 票据格式非法（仅允许 [A-Za-z0-9_]）")
+        if not cas_account.replace("_", "").isalnum():
+            raise CASTicketInvalid("Mock CAS: account 段格式非法")
 
         # service 必须在白名单（与 Real 行为一致，给团队留肌肉记忆）
         _ensure_service_whitelisted(service)

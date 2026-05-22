@@ -23,6 +23,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import FastAPI, Request, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -81,18 +82,21 @@ def install_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def _handle_validation(request: Request, exc: RequestValidationError) -> JSONResponse:
+        # Pydantic v2 把原始 ValueError 实例放进 ``ctx.error``，``JSONResponse``
+        # 不能直接 dump；统一走 ``jsonable_encoder`` 过一遍兜底。
+        safe_errors = jsonable_encoder(exc.errors()[:10])
         logger.info(
             "request_validation_error",
             path=request.url.path,
-            errors=exc.errors()[:10],
+            errors=safe_errors,
         )
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=422,
             content=_err_payload(
                 code=10001,
                 message="请求参数校验失败",
                 trace_id=_trace_id(request),
-                details={"errors": exc.errors()[:10]},
+                details={"errors": safe_errors},
             ),
         )
 

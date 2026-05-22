@@ -119,20 +119,26 @@ class TestLoginFlow:
         assert any(len(v) == 36 and v != "stale-session-id" for v in new_sids), new_sids
 
     async def test_replay_ticket_rejected(self, client: AsyncClient, seed_minimum) -> None:
-        """同一 ticket 二次使用 → CASTicketReplay。"""
-        # 第一次成功
-        resp1 = await client.post(
-            "/api/v1/auth/cas/mock-login",
-            json={"cas_account": "replay_test_user_xyz"},
+        """同一 CAS ticket 二次使用 → CASTicketReplay。
+
+        ``/cas/callback`` 是真实票据进入点（mock-login 端点会自动给每次请求拼
+        一个一次性 nonce 以绕开重放保护，便于本地多角色调试）。
+        """
+        from urllib.parse import quote
+
+        service = "http://localhost:8000/api/v1/auth/cas/callback"
+        ticket = "fixed_ticket_for_replay_test"
+        # 第一次成功（302 → 工作台）
+        resp1 = await client.get(
+            f"/api/v1/auth/cas/callback?ticket={ticket}&service={quote(service)}",
+            follow_redirects=False,
         )
-        # 第一次因为没 seed 该用户，会自动注册（Mock 模式行为）；只要返回 200 即可
-        assert resp1.status_code == 200, resp1.text
+        assert resp1.status_code in (302, 303), resp1.text
         # 第二次同一 ticket 被去重拒绝
-        resp2 = await client.post(
-            "/api/v1/auth/cas/mock-login",
-            json={"cas_account": "replay_test_user_xyz"},
+        resp2 = await client.get(
+            f"/api/v1/auth/cas/callback?ticket={ticket}&service={quote(service)}",
+            follow_redirects=False,
         )
-        # 期望 401 + 错误码 20006
         assert resp2.status_code == 401
         assert resp2.json()["code"] == 20006
 

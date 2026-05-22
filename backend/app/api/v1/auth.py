@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+from secrets import token_hex
 from typing import Annotated
 from urllib.parse import urlencode
 
@@ -104,8 +105,12 @@ async def mock_login(
 
     provider = get_auth_provider()
     auth_svc = AuthService(provider=provider)
+    # 给每次 mock 登录拼一个一次性 nonce（``account__<nonce>``）
+    # 这样后端的 TicketDedup 不会把同一个测试账号当成"票据重放"。
+    # MockCASProvider 只取 ``__`` 之前的部分作为 cas_account。
+    unique_ticket = f"{body.cas_account}__{token_hex(6)}"
     sd, snap = await auth_svc.cas_login(
-        ticket=body.cas_account,  # mock 模式：cas_account 即票据
+        ticket=unique_ticket,
         service=body.service or settings.cas.service_url,
         source_ip=request.client.host if request.client else "",
         user_agent=request.headers.get("user-agent", "") or "",
