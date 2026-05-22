@@ -145,6 +145,64 @@ class JudicialBadRequest(AppException):
     default_message = "司法协助查询参数缺失（协查文书编号 / 申请理由）"
 
 
+# ── 4xxxx · 预警与知识库 ─────────────────────────────────────────
+# 设计：``WarningError`` / ``KnowledgeError`` 各自作为本域的基类，子类继承它
+# 们以便 controller 用 ``except WarningError`` / ``except KnowledgeError`` 一
+# 次性兜底捕获整族异常；具体子类再各自覆盖 ``code`` / ``http_status`` /
+# ``default_message``，保持与 1xxxx 通用类（NotFound / Conflict /
+# ValidationError）的语义一致。
+class WarningError(AppException):
+    """预警业务错误基类（4xxxx）。"""
+
+    code = 40001
+    http_status = 400
+    default_message = "预警业务规则校验失败"
+
+
+class WarningNotFound(WarningError):
+    code = 40002
+    http_status = 404
+    default_message = "预警不存在"
+
+
+class WarningOfflineConflict(WarningError):
+    code = 40003
+    http_status = 409
+    default_message = "预警已下线"
+
+
+class WarningInvalidParam(WarningError):
+    code = 40004
+    http_status = 422
+    default_message = "预警参数非法"
+
+
+class KnowledgeError(AppException):
+    """知识库业务错误基类（4xxxx）。"""
+
+    code = 40010
+    http_status = 400
+    default_message = "知识库条目业务规则校验失败"
+
+
+class KnowledgeNotFound(KnowledgeError):
+    code = 40011
+    http_status = 404
+    default_message = "知识库条目不存在"
+
+
+class KnowledgeIllegalTransition(KnowledgeError):
+    code = 40012
+    http_status = 409
+    default_message = "非法的条目状态转换"
+
+
+class KnowledgeInvalidSearch(KnowledgeError):
+    code = 40013
+    http_status = 422
+    default_message = "条目搜索参数非法"
+
+
 # ── 9xxxx · 外部依赖 ──────────────────────────────────────────────
 class ExternalServiceError(AppException):
     code = 90099
