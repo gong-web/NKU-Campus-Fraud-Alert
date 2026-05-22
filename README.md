@@ -117,8 +117,8 @@ make migrate && make seed
 | 项目骨架 / 登录 / 审计（地基）               | @gong-web（巩岱松）                      |
 | 前端 UI / 设计系统 / 截图自动化              | @gong-web（巩岱松）                      |
 | 上报与状态流转 (UC-01/02)                    | TBD                                      |
-| 审核与预警 (UC-06/07)                        | TBD                                      |
-| 知识库与测验 (UC-04/05/08/09)                | TBD                                      |
+| 审核与预警 (UC-06/07)                        | @gzh / @lht                              |
+| 知识库与测验 (UC-04/05/08/09)                | @lht / @tsy                              |
 | 仪表盘与报表                                 | TBD                                      |
 
 详见 [`.github/CODEOWNERS`](.github/CODEOWNERS)。

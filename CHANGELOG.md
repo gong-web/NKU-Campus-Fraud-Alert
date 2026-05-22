@@ -2,6 +2,33 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased] - 2026-05-21 · @lht  - 新增 UC-03/04/07/08 预警与知识库模块
+
+### Added — 预警公告（UC-03 / UC-07）
+
+- 后端：`WarningNotice` / `WarningTarget` 两张表 + Alembic 迁移；`POST /admin/warnings`、`GET /warnings`、`POST /admin/warnings/{id}/append`、`POST /admin/warnings/{id}/offline`、管理员侧 `GET/list` 接口完整闭环。
+- 业务规则：`warning_level=3`（紧急）发布额外校验登录用户 `Role.role_level == 2`（校级 reviewer）；`push_scope=DEPARTMENT` 必须携带 `target_dept_ids`；同事务内 `audit.write(sync=True, session=session)` + `send_notification`（事务内 fan-out 给学生）；紧急级邮件占位（`_send_email_for_urgent`）。
+- 状态机：`ONLINE → OFFLINE`；OFFLINE 不可追加；重复 offline 触发 `WarningOfflineConflict (40003)`。
+- 前端：`/admin/warnings`（列表 / 编辑器 / 详情）+ `/student/warnings`（列表 / 详情）+ 学生端首页紧急横幅。
+
+### Added — 知识库（UC-04 / UC-08）
+
+- 后端：`KnowledgeEntry` / `KnowledgeEntryHistory` 两张表 + MySQL 8 FULLTEXT(ngram) 索引；`DRAFT → PENDING → PUBLISHED → OFFLINE` 状态机（`backend/app/services/state_machine.py`）；版本号自增 + 整行 JSON 快照入历史。
+- 接口：作者 `POST /admin/knowledge/drafts` → `submit` → 校级 reviewer `approve` / `reject` → `offline`；学生侧 `GET /knowledge` 全文搜索 + 推荐相关条目。
+- 前端：`/admin/knowledge`（列表 / 编辑器 / 详情，含驳回原因 + 状态徽章）+ `/student/knowledge`（搜索 / 详情）。
+
+### Tests
+
+- 后端集成：`tests/integration/test_warnings.py`（7 用例）、`tests/integration/test_knowledge.py`（7 用例）。
+- 后端单元：`tests/unit/test_warning_state.py`（5 用例）、`tests/unit/test_knowledge_state_machine.py`（27 用例）。
+- 全仓 108 / 108 测试绿。
+
+### Removed
+
+- 学生端预警「已读 / 未读」功能：删除 `WarningRead` 模型、`warning_reads` 表（迁移 + downgrade 同步）、`mark_read` / `count_reads` 仓储方法、Schema 上的 `has_read` / `read_count` 字段，以及前端三处展示与 CSS。
+
+---
+
 ## [Unreleased]
 
 ### Added — 地基工程（Foundation）

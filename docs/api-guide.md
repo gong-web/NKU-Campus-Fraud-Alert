@@ -257,3 +257,111 @@ Cookie: afp_session=<session>
 - [ ] 测试覆盖：成功 + 至少 1 条失败路径
 - [ ] OpenAPI `/docs` 看得到本接口
 - [ ] 错误码（如有新建）已加到 `docs/error-codes.md`
+
+---
+
+## 已实现接口示例（UC-03/04/07/08，@lht）
+
+### POST /api/v1/admin/warnings — 发布预警
+
+**权限**：`warning:publish`；`warning_level=3`（紧急）额外要求登录用户 `Role.role_level == 2`（校级 reviewer）。
+
+```http
+POST /api/v1/admin/warnings
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+Cookie: afp_session=<session>
+
+{
+  "title": "警惕假冒辅导员收取『新生材料费』",
+  "content": "近期多名同学接到自称辅导员的短信要求转账，请同学务必通过电话确认...",
+  "warning_level": 2,
+  "push_scope": "DEPARTMENT",
+  "target_dept_ids": [12, 13],
+  "related_case_no": "CR2026-0042",
+  "expires_at": "2026-06-30T23:59:59+08:00"
+}
+```
+
+成功响应 `201 Created`：返回完整 `WarningOut`（不含已读相关字段）。
+
+错误：
+- `403 / 20002` — 角色无权限或非校级管理员发紧急预警
+- `422 / 10001` — `push_scope=DEPARTMENT` 时未传 `target_dept_ids`
+
+---
+
+### GET /api/v1/warnings — 学生侧预警列表
+
+**权限**：`warning:read`，仅返回 `FULL_SCHOOL` 或当前用户院系命中 `warning_targets` 的预警。
+
+```http
+GET /api/v1/warnings?status=ONLINE&page=1&size=20
+Cookie: afp_session=<session>
+```
+
+成功响应：分页 `WarningListItemOut`（精简视图：标题、等级、状态、发布人、发布时间）。
+
+---
+
+### POST /api/v1/admin/warnings/{warning_id}/append — 追加后续说明
+
+```http
+POST /api/v1/admin/warnings/9876543210/append
+{
+  "appendix": "案件已侦破，已抓获嫌疑人 3 名。"
+}
+```
+
+错误：`409 / 40003` 已下线预警不可追加。
+
+---
+
+### POST /api/v1/admin/warnings/{warning_id}/offline — 手动下线
+
+```http
+POST /api/v1/admin/warnings/9876543210/offline
+{
+  "reason": "原案件已澄清"
+}
+```
+
+错误：`409 / 40003` 重复下线。
+
+---
+
+### POST /api/v1/admin/knowledge/drafts — 创建知识库草稿（DRAFT）
+
+**权限**：`knowledge:author`；状态机 `DRAFT → PENDING → PUBLISHED → OFFLINE`。
+
+```http
+POST /api/v1/admin/knowledge/drafts
+{
+  "title": "假冒客服退款类诈骗识别要点",
+  "fraud_type_id": 1,
+  "desensitized_summary": "...",
+  "identification_points": "...",
+  "prevention_advice": "...",
+  "source_type": "CASE",
+  "peak_periods": "开学季 / 双十一前后"
+}
+```
+
+后续动作：
+- `POST /admin/knowledge/{entry_id}/submit` — 提交审核（DRAFT → PENDING）
+- `POST /admin/knowledge/{entry_id}/approve` — 校级 reviewer 通过（PENDING → PUBLISHED）
+- `POST /admin/knowledge/{entry_id}/reject` — 驳回（PENDING → DRAFT，需 `review_note`）
+- `POST /admin/knowledge/{entry_id}/offline` — 下线（PUBLISHED → OFFLINE）
+
+---
+
+### GET /api/v1/knowledge — 学生侧知识库搜索
+
+**权限**：`knowledge:read`；MySQL 8 FULLTEXT(ngram) 搜索 + `fraud_type_id` 过滤。
+
+```http
+GET /api/v1/knowledge?keyword=客服&fraud_type_id=1&page=1&size=20
+```
+
+返回 `PaginationOut[KnowledgeListItem]`，按 `published_at DESC` 默认排序。
+
