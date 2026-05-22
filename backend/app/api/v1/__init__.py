@@ -2,7 +2,22 @@
 
 from fastapi import APIRouter
 
-from app.api.v1 import _examples, admin_reports, audit, auth, drafts, fraud_types, judicial, reports, users
+from app.api.v1 import (
+    _examples,
+    admin_knowledge,
+    admin_reports,
+    admin_warnings,
+    audit,
+    auth,
+    departments,
+    drafts,
+    fraud_types,
+    judicial,
+    knowledge,
+    reports,
+    users,
+    warnings,
+)
 
 
 def build_v1_router() -> APIRouter:
@@ -16,5 +31,13 @@ def build_v1_router() -> APIRouter:
     router.include_router(fraud_types.router)
     router.include_router(reports.router)
     router.include_router(drafts.router)
+    # 通用字典：院系
+    router.include_router(departments.router)
+    # UC-03 / UC-07：预警公告
+    router.include_router(warnings.router)
+    router.include_router(admin_warnings.router)
+    # UC-04 / UC-08：知识库
+    router.include_router(knowledge.router)
+    router.include_router(admin_knowledge.router)
     router.include_router(_examples.router)
     return router
