@@ -73,6 +73,32 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/student/DraftsPage.vue"),
         meta: { title: "草稿箱" },
       },
+      // UC-07：安全预警
+      {
+        path: "warnings",
+        name: "warning-list",
+        component: () => import("@/pages/student/WarningListPage.vue"),
+        meta: { title: "安全预警" },
+      },
+      {
+        path: "warnings/:warning_id",
+        name: "warning-detail",
+        component: () => import("@/pages/student/WarningDetailPage.vue"),
+        meta: { title: "预警详情" },
+      },
+      // UC-08：反诈知识库
+      {
+        path: "kb",
+        name: "kb-list",
+        component: () => import("@/pages/student/KnowledgeListPage.vue"),
+        meta: { title: "反诈知识库" },
+      },
+      {
+        path: "kb/:entry_id",
+        name: "kb-detail",
+        component: () => import("@/pages/student/KnowledgeDetailPage.vue"),
+        meta: { title: "知识详情" },
+      },
     ],
   },
   // ── 审核管理员 ───────────────────────────────────────────
@@ -102,6 +128,50 @@ const routes: RouteRecordRaw[] = [
         name: "admin-report-detail",
         component: () => import("@/pages/admin/ReportDetailPage.vue"),
         meta: { title: "案件审核详情" },
+      },
+      // UC-07：预警公告
+      {
+        path: "warnings",
+        name: "admin-warning-list",
+        component: () => import("@/pages/admin/WarningListPage.vue"),
+        meta: { title: "预警公告" },
+      },
+      {
+        path: "warnings/new",
+        name: "admin-warning-new",
+        component: () => import("@/pages/admin/WarningEditorPage.vue"),
+        meta: { title: "发布预警" },
+      },
+      {
+        path: "warnings/:warning_id",
+        name: "admin-warning-detail",
+        component: () => import("@/pages/admin/WarningDetailPage.vue"),
+        meta: { title: "预警详情" },
+      },
+      // UC-04 / UC-08：知识库管理
+      {
+        path: "kb",
+        name: "admin-kb-list",
+        component: () => import("@/pages/admin/KnowledgeListPage.vue"),
+        meta: { title: "知识库管理" },
+      },
+      {
+        path: "kb/new",
+        name: "admin-kb-new",
+        component: () => import("@/pages/admin/KnowledgeEditorPage.vue"),
+        meta: { title: "新建知识条目" },
+      },
+      {
+        path: "kb/:entry_id/edit",
+        name: "admin-kb-edit",
+        component: () => import("@/pages/admin/KnowledgeEditorPage.vue"),
+        meta: { title: "编辑知识条目" },
+      },
+      {
+        path: "kb/:entry_id",
+        name: "admin-kb-detail",
+        component: () => import("@/pages/admin/KnowledgeDetailPage.vue"),
+        meta: { title: "知识条目详情" },
       },
     ],
   },

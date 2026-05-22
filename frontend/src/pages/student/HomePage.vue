@@ -1,7 +1,17 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import {
+  knowledgeApi,
+  type KnowledgeListItem,
+} from "@/api/knowledge";
+import {
+  warningsApi,
+  WARNING_LEVEL_LABEL,
+  type WarningLevel,
+  type WarningListItem,
+} from "@/api/warnings";
 import {
   AppButton,
   AppCard,
@@ -12,6 +22,79 @@ import {
 const router = useRouter();
 
 const auth = useAuthStore();
+
+const topWarning = ref<WarningListItem | null>(null);
+const kbRecommended = ref<KnowledgeListItem[]>([]);
+
+function warnLevelClass(
+  level: WarningLevel,
+): "info" | "warning" | "urgent" {
+  if (level === 3) return "urgent";
+  if (level === 2) return "warning";
+  return "info";
+}
+
+async function loadTopWarning(): Promise<void> {
+  try {
+    const result = await warningsApi.listMine({
+      page: 1,
+      size: 10,
+      status: "ONLINE",
+    });
+    if (result.items.length === 0) {
+      topWarning.value = null;
+      return;
+    }
+    let pick = result.items[0]!;
+    for (const w of result.items) {
+      if (w.warning_level > pick.warning_level) pick = w;
+    }
+    topWarning.value = pick;
+  } catch {
+    topWarning.value = null;
+  }
+}
+
+async function loadKbRecommended(): Promise<void> {
+  try {
+    const result = await knowledgeApi.listPublic({
+      page: 1,
+      size: 3,
+      sort: "published_at_desc",
+    });
+    kbRecommended.value = result.items;
+  } catch {
+    kbRecommended.value = [];
+  }
+}
+
+function openWarningDetail(): void {
+  if (!topWarning.value) return;
+  void router.push({
+    name: "warning-detail",
+    params: { warning_id: topWarning.value.warning_id },
+  });
+}
+
+function openKbList(): void {
+  void router.push({ name: "kb-list" });
+}
+
+function openKbDetail(item: KnowledgeListItem): void {
+  void router.push({
+    name: "kb-detail",
+    params: { entry_id: item.entry_id },
+  });
+}
+
+function openWarningList(): void {
+  void router.push({ name: "warning-list" });
+}
+
+onMounted(() => {
+  void loadTopWarning();
+  void loadKbRecommended();
+});
 
 const greeting = computed<string>(() => {
   const hour = new Date().getHours();
@@ -178,6 +261,39 @@ const HOTLINES: readonly Hotline[] = [
       :title="`${greeting}，${auth.me?.real_name ?? '同学'}`"
       subtitle="保持警惕，发现疑似诈骗及时上报，让校园更安全。一键报、有人审、有反馈。"
     />
+
+    <!-- 顶部安全预警横幅（按最高级预警上色） -->
+    <button
+      v-if="topWarning"
+      type="button"
+      class="student-home__warn-banner"
+      :class="`student-home__warn-banner--${warnLevelClass(topWarning.warning_level)}`"
+      @click="openWarningDetail"
+    >
+      <span class="student-home__warn-banner-glow" aria-hidden="true" />
+      <span class="student-home__warn-banner-icon">
+        <AppIcon
+          :name="topWarning.warning_level === 3 ? 'siren' : 'shield-alert'"
+          :size="22"
+        />
+      </span>
+      <span class="student-home__warn-banner-body">
+        <span class="student-home__warn-banner-eyebrow">
+          <span class="student-home__warn-banner-dot" />
+          {{ WARNING_LEVEL_LABEL[topWarning.warning_level] }}级预警
+        </span>
+        <strong class="student-home__warn-banner-title">
+          {{ topWarning.title }}
+        </strong>
+      </span>
+      <span
+        class="student-home__warn-banner-cta"
+        @click.stop="openWarningList"
+      >
+        查看全部
+        <AppIcon name="arrow-right" :size="14" />
+      </span>
+    </button>
 
     <!-- 英雄卡：30 秒上报 -->
     <AppCard
@@ -382,6 +498,47 @@ const HOTLINES: readonly Hotline[] = [
           />
         </AppButton>
       </article>
+    </section>
+
+    <!-- 反诈知识库推荐 -->
+    <section
+      v-if="kbRecommended.length > 0"
+      class="student-home__kb"
+    >
+      <div class="student-home__kb-head">
+        <div>
+          <h3 class="student-home__kb-title">
+            <AppIcon name="book-open" :size="18" />
+            反诈知识库
+          </h3>
+          <small>近期已发布的典型案例与防范指引</small>
+        </div>
+        <AppButton variant="ghost" size="sm" @click="openKbList">
+          浏览全部
+          <AppIcon name="arrow-right" :size="14" />
+        </AppButton>
+      </div>
+      <div class="student-home__kb-grid">
+        <article
+          v-for="(k, i) in kbRecommended"
+          :key="k.entry_id"
+          class="student-home__kb-card"
+          :style="{ animationDelay: `${0.06 * i}s` }"
+          @click="openKbDetail(k)"
+        >
+          <span class="student-home__kb-card-corner" aria-hidden="true" />
+          <span class="student-home__kb-card-tag">
+            <AppIcon name="tag" :size="12" />
+            {{ k.fraud_type_name || "通用" }}
+          </span>
+          <h4>{{ k.title }}</h4>
+          <p>{{ k.desensitized_summary }}</p>
+          <span class="student-home__kb-card-foot">
+            <AppIcon name="arrow-right" :size="13" />
+            阅读
+          </span>
+        </article>
+      </div>
     </section>
 
     <!-- 双栏：诈骗类型 + 紧急联系 -->
@@ -954,5 +1111,269 @@ const HOTLINES: readonly Hotline[] = [
 
 .student-home__tip span {
   color: var(--color-text);
+}
+
+/* ── 安全预警横幅 ─────────────────────────────────────────────── */
+.student-home__warn-banner {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  background: var(--color-surface);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  overflow: hidden;
+  transition: transform var(--duration-base) var(--easing-out),
+    box-shadow var(--duration-base) var(--easing-out);
+  color: inherit;
+}
+
+.student-home__warn-banner:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-mid);
+}
+
+.student-home__warn-banner-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background:
+    radial-gradient(at 0% 0%, currentcolor 0%, transparent 70%),
+    radial-gradient(at 100% 100%, currentcolor 0%, transparent 60%);
+}
+
+.student-home__warn-banner--info {
+  background: linear-gradient(135deg, rgb(25 118 210 / 8%), rgb(25 118 210 / 2%));
+  border-color: rgb(25 118 210 / 28%);
+  color: var(--color-warn-info, var(--color-info));
+}
+
+.student-home__warn-banner--warning {
+  background: linear-gradient(135deg, rgb(239 108 0 / 10%), rgb(239 108 0 / 2%));
+  border-color: rgb(239 108 0 / 32%);
+  color: var(--color-warn-warning, var(--color-warning));
+}
+
+.student-home__warn-banner--urgent {
+  background: linear-gradient(135deg, rgb(198 40 40 / 12%), rgb(198 40 40 / 4%));
+  border-color: rgb(198 40 40 / 36%);
+  color: var(--color-warn-urgent, var(--color-danger));
+  animation: warn-banner-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes warn-banner-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(198 40 40 / 0%); }
+  50% { box-shadow: 0 0 0 4px rgb(198 40 40 / 14%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-home__warn-banner--urgent { animation: none; }
+}
+
+.student-home__warn-banner-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: currentcolor;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.student-home__warn-banner-icon svg {
+  color: #fff;
+}
+
+.student-home__warn-banner-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.student-home__warn-banner-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: inherit;
+}
+
+.student-home__warn-banner-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentcolor;
+  box-shadow: 0 0 6px currentcolor;
+}
+
+.student-home__warn-banner-title {
+  font-family: var(--font-family-serif);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.student-home__warn-banner-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  border: 1px solid currentcolor;
+  white-space: nowrap;
+  transition: background var(--duration-base) var(--easing-out);
+}
+
+.student-home__warn-banner-cta:hover {
+  background: var(--color-bg-soft);
+}
+
+/* ── 反诈知识库推荐 ───────────────────────────────────────────── */
+.student-home__kb {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.student-home__kb-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.student-home__kb-title {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-family-serif);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  letter-spacing: -0.01em;
+}
+
+.student-home__kb-head small {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.student-home__kb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+.student-home__kb-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-low);
+  cursor: pointer;
+  animation: feature-in 460ms var(--easing-out) both;
+  transition:
+    transform var(--duration-base) var(--easing-out),
+    box-shadow var(--duration-base) var(--easing-out),
+    border-color var(--duration-base) var(--easing-out);
+  overflow: hidden;
+}
+
+.student-home__kb-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-mid);
+  border-color: var(--color-brand-300);
+}
+
+.student-home__kb-card-corner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid var(--color-gold-400);
+  border-left: 2px solid var(--color-gold-400);
+  border-top-left-radius: var(--radius-lg);
+  pointer-events: none;
+}
+
+.student-home__kb-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-brand-50);
+  color: var(--color-brand-700);
+  font-size: 10.5px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+.student-home__kb-card h4 {
+  margin: 0;
+  font-family: var(--font-family-serif);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-strong);
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.student-home__kb-card p {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.student-home__kb-card-foot {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--color-border);
+  font-size: 11px;
+  color: var(--color-brand-600);
+  font-weight: var(--font-weight-semibold);
 }
 </style>

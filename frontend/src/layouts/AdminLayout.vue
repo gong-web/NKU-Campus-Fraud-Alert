@@ -17,6 +17,8 @@ interface NavItem {
 const NAV: readonly NavItem[] = [
   { to: "/admin/dashboard", label: "工作台", icon: "activity", description: "待处理事件总览" },
   { to: "/admin/reports", label: "审核队列", icon: "clipboard-list", description: "筛选、查看并处理案件" },
+  { to: "/admin/warnings", label: "预警公告", icon: "bell", description: "发布与维护安全预警" },
+  { to: "/admin/kb", label: "知识库", icon: "book-open", description: "撰写与审核反诈知识" },
 ];
 
 const initial = computed<string>(() => {
@@ -25,9 +27,16 @@ const initial = computed<string>(() => {
 });
 
 async function handleLogout(): Promise<void> {
-  const url = await auth.logout();
-  if (url) window.location.href = url;
-  else router.replace({ name: "login" });
+  try {
+    const url = await auth.logout();
+    if (url && /^https?:\/\//i.test(url)) {
+      window.location.href = url;
+      return;
+    }
+  } catch {
+    // 即使 logout 接口失败也照样退到登录页（本地会话已清）
+  }
+  await router.replace({ name: "login" });
 }
 </script>
 

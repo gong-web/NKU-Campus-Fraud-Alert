@@ -28,9 +28,16 @@ const initial = computed<string>(() => {
 });
 
 async function handleLogout(): Promise<void> {
-  const url = await auth.logout();
-  if (url) window.location.href = url;
-  else router.replace({ name: "login" });
+  try {
+    const url = await auth.logout();
+    if (url && /^https?:\/\//i.test(url)) {
+      window.location.href = url;
+      return;
+    }
+  } catch {
+    // 即使 logout 接口失败也照样退到登录页（本地会话已清）
+  }
+  await router.replace({ name: "login" });
 }
 </script>
 
