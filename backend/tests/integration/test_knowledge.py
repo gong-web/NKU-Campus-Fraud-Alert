@@ -152,6 +152,14 @@ async def seed_kb_minimum(db_session):
             role_id=reviewer_school_role.role_id,
             status=UserStatus.ACTIVE.value,
         ),
+        User(
+            user_id=9203,
+            cas_account="reviewer_school002",
+            real_name="校级审核员二号",
+            department_id=dept_unknown.dept_id,
+            role_id=reviewer_school_role.role_id,
+            status=UserStatus.ACTIVE.value,
+        ),
     ]
     db_session.add_all(users)
     await db_session.commit()
@@ -281,6 +289,8 @@ async def test_reject_returns_to_draft(
     assert body["status"] == "PUBLISHED"
 
     # 已发布 → 再次审核 REJECT，应触发 409 KnowledgeIllegalTransition
+    # 由另一位校级 reviewer 发起，绕开「不可自审」拦截，确保走到状态机校验
+    await _login(client, "reviewer_school002")
     again = await client.post(
         f"/api/v1/admin/knowledge/{entry_id}/review",
         json={"action": "REJECT", "review_note": "复审驳回的理由"},

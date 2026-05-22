@@ -161,20 +161,25 @@ async def seed_all() -> None:  # noqa: C901 - seed 脚本按步骤串行更容�
             (rp.role_id, rp.permission_id)
             for rp in (await session.execute(select(RolePermission))).scalars()
         }
-        for role_code, codes in perm.ROLE_PERMISSIONS_DEFAULT.items():
-            for role_obj in roles_by_code.get(role_code, []):
-                for code in codes:
-                    p = perms_by_code.get(code)
-                    if p is None:
-                        continue
-                    if (role_obj.role_id, p.permission_id) in existing_pairs:
-                        continue
-                    session.add(
-                        RolePermission(
-                            role_id=role_obj.role_id,
-                            permission_id=p.permission_id,
-                        )
+        for (role_code, role_level), codes in perm.ROLE_PERMISSIONS_DEFAULT.items():
+            target_role = next(
+                (r for r in roles_by_code.get(role_code, []) if r.role_level == role_level),
+                None,
+            )
+            if target_role is None:
+                continue
+            for code in codes:
+                p = perms_by_code.get(code)
+                if p is None:
+                    continue
+                if (target_role.role_id, p.permission_id) in existing_pairs:
+                    continue
+                session.add(
+                    RolePermission(
+                        role_id=target_role.role_id,
+                        permission_id=p.permission_id,
                     )
+                )
         await session.flush()
 
         # 5. 测试账号

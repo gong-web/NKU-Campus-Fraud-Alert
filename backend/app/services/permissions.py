@@ -60,15 +60,34 @@ QUIZ_ASSIGN: Final[str] = "quiz:assign"
 
 
 # ── 默认角色 → 权限矩阵（seed 时灌入） ─────────────────────────
-ROLE_PERMISSIONS_DEFAULT: Final[dict[str, set[str]]] = {
-    "STUDENT": {
+# Key = (role_code, role_level)。`REVIEWER` 拆 dept(level=1) / school(level=2)：
+# 院系级只允许「读 + 创建草稿」，校级才有「审核 + 下线」。这与 service 层
+# `_ensure_school_reviewer_or_raise`（``knowledge_entry_service.py``）保持一致，
+# 也避免前端依据 ``hasPermission('kb:review')`` 误显示按钮。
+ROLE_PERMISSIONS_DEFAULT: Final[dict[tuple[str, int], set[str]]] = {
+    ("STUDENT", 1): {
         REPORT_CREATE,
         REPORT_READ_OWN,
         WARNING_READ,
         KB_READ,
         QUIZ_TAKE,
     },
-    "REVIEWER": {
+    ("REVIEWER", 1): {
+        # 院系级 reviewer：报案审核 + 预警发布 + 知识库写草稿，但不审核知识库
+        REPORT_READ_ALL,
+        REPORT_REVIEW,
+        REPORT_VIEW_EVIDENCE,
+        WARNING_READ,
+        WARNING_PUBLISH,
+        WARNING_APPEND,
+        WARNING_OFFLINE,
+        KB_READ,
+        KB_CREATE,
+        QUIZ_BANK_MANAGE,
+        QUIZ_ASSIGN,
+    },
+    ("REVIEWER", 2): {
+        # 校级 reviewer：在院系级基础上加 kb:review / kb:offline
         REPORT_READ_ALL,
         REPORT_REVIEW,
         REPORT_VIEW_EVIDENCE,
@@ -83,7 +102,7 @@ ROLE_PERMISSIONS_DEFAULT: Final[dict[str, set[str]]] = {
         QUIZ_BANK_MANAGE,
         QUIZ_ASSIGN,
     },
-    "SYS_ADMIN": {
+    ("SYS_ADMIN", 1): {
         USER_CREATE,
         USER_READ,
         USER_UPDATE,
