@@ -36,6 +36,11 @@ from app.infra.db.models.knowledge_entry import KnowledgeEntry
 from app.infra.db.models.knowledge_entry_history import KnowledgeEntryHistory
 from app.infra.db.models.notification import Notification
 from app.infra.db.models.permission import Permission
+from app.infra.db.models.question_bank import QuestionBank
+from app.infra.db.models.quiz import Quiz
+from app.infra.db.models.quiz_attempt import QuizAttempt
+from app.infra.db.models.quiz_attempt_answer import QuizAttemptAnswer
+from app.infra.db.models.quiz_question import QuizQuestion
 from app.infra.db.models.report_draft import ReportDraft
 from app.infra.db.models.role import Role
 from app.infra.db.models.role_permission import RolePermission
@@ -63,6 +68,11 @@ __all__ = [
     "KnowledgeEntryHistory",
     "Notification",
     "Permission",
+    "QuestionBank",
+    "Quiz",
+    "QuizAttempt",
+    "QuizAttemptAnswer",
+    "QuizQuestion",
     "ReportDraft",
     "Role",
     "RolePermission",

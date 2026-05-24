@@ -13,6 +13,7 @@ export { default as AppErrorState } from "./AppErrorState.vue";
 export { default as AppIcon } from "./AppIcon.vue";
 export { default as AppInput } from "./AppInput.vue";
 export { default as AppModal } from "./AppModal.vue";
+export { default as AppNotificationBell } from "./AppNotificationBell.vue";
 export { default as AppPageHeader } from "./AppPageHeader.vue";
 export { default as AppSkeleton } from "./AppSkeleton.vue";
 export { default as AppStatCard } from "./AppStatCard.vue";

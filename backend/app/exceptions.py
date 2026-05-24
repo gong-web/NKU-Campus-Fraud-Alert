@@ -203,6 +203,57 @@ class KnowledgeInvalidSearch(KnowledgeError):
     default_message = "条目搜索参数非法"
 
 
+# ── 5xxxx · 安全测验（UC-05 / UC-09） ────────────────────────────
+class QuizError(AppException):
+    """测验业务错误基类（5xxxx）。"""
+
+    code = 50001
+    http_status = 400
+    default_message = "测验业务规则校验失败"
+
+
+class QuizNotFound(QuizError):
+    code = 50002
+    http_status = 404
+    default_message = "测验不存在"
+
+
+class QuestionNotFound(QuizError):
+    code = 50003
+    http_status = 404
+    default_message = "题目不存在"
+
+
+class QuizClosed(QuizError):
+    code = 50004
+    http_status = 409
+    default_message = "测验已结束或已撤回"
+
+
+class QuizAlreadySubmitted(QuizError):
+    code = 50005
+    http_status = 409
+    default_message = "已提交答案，不可重复提交"
+
+
+class QuizNotEligible(QuizError):
+    code = 50006
+    http_status = 403
+    default_message = "未在本次测验的参与范围内"
+
+
+class QuizQuestionBankExhausted(QuizError):
+    code = 50007
+    http_status = 422
+    default_message = "题库可用题目数不足，无法生成测验"
+
+
+class QuizInvalidParam(QuizError):
+    code = 50008
+    http_status = 422
+    default_message = "测验参数非法"
+
+
 # ── 9xxxx · 外部依赖 ──────────────────────────────────────────────
 class ExternalServiceError(AppException):
     code = 90099

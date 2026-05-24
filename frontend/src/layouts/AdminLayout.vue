@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { AppIcon, BrandLogo } from "@/components";
+import AppNotificationBell from "@/components/AppNotificationBell.vue";
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -19,6 +20,7 @@ const NAV: readonly NavItem[] = [
   { to: "/admin/reports", label: "审核队列", icon: "clipboard-list", description: "筛选、查看并处理案件" },
   { to: "/admin/warnings", label: "预警公告", icon: "bell", description: "发布与维护安全预警" },
   { to: "/admin/kb", label: "知识库", icon: "book-open", description: "撰写与审核反诈知识" },
+  { to: "/admin/quiz", label: "安全测验", icon: "check-circle", description: "题库 · 指定测验 · 完成率报告" },
 ];
 
 const initial = computed<string>(() => {
@@ -122,6 +124,7 @@ async function handleLogout(): Promise<void> {
           <strong>{{ $route.meta.title || "工作台" }}</strong>
         </div>
         <div class="admin-layout__user">
+          <AppNotificationBell />
           <div class="admin-layout__user-meta">
             <strong>{{ auth.me?.real_name || "未登录" }}</strong>
             <small>审核管理员</small>

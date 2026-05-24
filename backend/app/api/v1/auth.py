@@ -25,6 +25,8 @@ from app.domain.user_snapshot import UserSnapshot
 from app.exceptions import OpenRedirectBlocked
 from app.infra.cache.rbac_cache import RBACCache
 from app.infra.cas.factory import get_auth_provider
+from app.infra.db.models.role import Role
+from app.infra.db.session import uow
 from app.schemas.auth import LoginUrlOut, LogoutOut, MockLoginIn, WhoAmIOut
 from app.services.auth_service import AuthService
 
@@ -118,12 +120,18 @@ async def mock_login(
     _set_session_cookie(response, sd.session_id)
     rbac = RBACCache()
     perms = await rbac.list_permissions(snap.role_id)
+
+    async with uow() as session:
+        role = await session.get(Role, snap.role_id)
+        role_level = int(role.role_level) if role else 0
+
     return WhoAmIOut(
         user_id=snap.user_id,
         cas_account=snap.cas_account,
         real_name=snap.real_name,
         role_id=snap.role_id,
         role_code=snap.role_code,
+        role_level=role_level,
         department_id=snap.department_id,
         permissions=sorted(perms),
         session_expires_in_seconds=settings.security.session_ttl_seconds,
@@ -142,12 +150,18 @@ async def whoami(
     rbac = RBACCache()
     perms = await rbac.list_permissions(current.role_id)
     auth_svc = AuthService(provider=get_auth_provider())
+
+    async with uow() as session:
+        role = await session.get(Role, current.role_id)
+        role_level = int(role.role_level) if role else 0
+
     return WhoAmIOut(
         user_id=current.user_id,
         cas_account=current.cas_account,
         real_name=current.real_name,
         role_id=current.role_id,
         role_code=current.role_code,
+        role_level=role_level,
         department_id=current.department_id,
         permissions=sorted(perms),
         session_expires_in_seconds=await auth_svc.remaining_seconds(current.session_id),

@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { AppIcon, BrandLogo } from "@/components";
+import AppNotificationBell from "@/components/AppNotificationBell.vue";
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -132,6 +133,7 @@ async function handleLogout(): Promise<void> {
           <strong>{{ $route.meta.title || $route.name }}</strong>
         </div>
         <div class="sys-layout__user">
+          <AppNotificationBell />
           <div class="sys-layout__user-meta">
             <strong>{{ auth.me?.real_name || "未登录" }}</strong>
             <small>系统管理员</small>

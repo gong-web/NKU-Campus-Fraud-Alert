@@ -93,6 +93,7 @@ services:
       - ./backend/.env
     environment:
       APP_ENV: ${APP_ENV:-local}
+      PYTHONPATH: /app 
       DATABASE_URL: mysql+aiomysql://${MYSQL_USER:-app_user}:${MYSQL_PASSWORD:-apppassword}@mysql:3306/${MYSQL_DATABASE:-anti_fraud}?charset=utf8mb4
       REDIS_URL: redis://:${REDIS_PASSWORD:-redispassword}@redis:6379/0
       S3_ENDPOINT: http://minio:9000

@@ -59,6 +59,17 @@ function goRelated(item: KnowledgeListItem): void {
 }
 
 function goBack(): void {
+  if (route.query.from === "quiz-wrong") {
+    void router.push({ name: "quiz-wrong" });
+    return;
+  }
+  if (route.query.from === "quiz-answer") {
+    const attemptId = String(route.query.attempt_id ?? "");
+    if (attemptId) {
+      void router.push({ name: "quiz-answer", params: { attempt_id: attemptId } });
+      return;
+    }
+  }
   void router.push({ name: "kb-list" });
 }
 
@@ -71,7 +82,7 @@ onMounted(load);
       <template #actions>
         <AppButton variant="ghost" size="sm" @click="goBack">
           <AppIcon name="arrow-left" :size="14" />
-          返回知识库
+          {{ route.query.from === "quiz-wrong" ? "返回错题本" : route.query.from === "quiz-answer" ? "返回测验" : "返回知识库" }}
         </AppButton>
       </template>
     </AppPageHeader>

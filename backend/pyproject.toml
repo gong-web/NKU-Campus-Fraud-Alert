@@ -12,44 +12,42 @@ dependencies = [
     "uvicorn[standard]>=0.29,<1.0",
     "gunicorn>=22.0,<24.0",
     "httpx>=0.27,<1.0",
-    "python-multipart>=0.0.9",  # 表单 / 文件上传
+    "python-multipart>=0.0.9",
+    # 表单 / 文件上传
     "starlette>=0.37",
-
     # 数据校验 / 配置
     "pydantic>=2.7,<3.0",
     "pydantic-settings>=2.3,<3.0",
     "email-validator>=2.1,<3.0",
-
     # 数据库
     "sqlalchemy[asyncio]>=2.0.30,<3.0",
     "aiomysql>=0.2.0,<1.0",
     "alembic>=1.13,<2.0",
-    "pymysql>=1.1,<2.0",  # alembic 同步迁移用
-
+    "pymysql>=1.1,<2.0",
+    # alembic 同步迁移用
     # Redis
     "redis>=5.0,<6.0",
-
     # 安全 / 加密
     "cryptography>=46.0.7,<47.0",
     "passlib>=1.7,<2.0",
     "itsdangerous>=2.2,<3.0",
-
     # 日志 / 可观测性
     "structlog>=24.1,<26.0",
     "prometheus-client>=0.20,<1.0",
-
     # CAS
-    "lxml>=6.1,<7.0",  # 解析 CAS XML
-    "defusedxml>=0.7,<1.0",  # 防 XXE
-
+    "lxml>=6.1,<7.0",
+    # 解析 CAS XML
+    "defusedxml>=0.7,<1.0",
+    # 防 XXE
     # 工具
     "orjson>=3.10,<4.0",
     "python-dateutil>=2.9,<3.0",
     "pytz>=2024.1",
-
     # 对象存储
     "boto3>=1.34,<2.0",
     "apscheduler>=3.10,<4.0",
+    # Excel 导出（UC-09 完成率报告）
+    "openpyxl>=3.1,<4.0",
 ]
 
 [project.optional-dependencies]

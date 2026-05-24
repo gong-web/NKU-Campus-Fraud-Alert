@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { AppIcon, BrandLogo } from "@/components";
+import AppNotificationBell from "@/components/AppNotificationBell.vue";
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -25,6 +26,7 @@ const NAV: readonly NavItem[] = [
   { to: "/student/drafts", label: "草稿箱", icon: "file-text" },
   { to: "/student/warnings", label: "安全预警", icon: "bell" },
   { to: "/student/kb", label: "反诈知识库", icon: "book-open" },
+  { to: "/student/quiz", label: "安全测验", icon: "check-circle" },
   { to: "/student/profile", label: "个人中心", icon: "user" },
 ];
 
@@ -81,6 +83,7 @@ async function handleLogout(): Promise<void> {
         <strong>学生工作台</strong>
       </span>
       <div class="student-layout__user">
+        <AppNotificationBell />
         <span
           class="student-layout__avatar"
           aria-hidden="true"

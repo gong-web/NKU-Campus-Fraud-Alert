@@ -30,6 +30,8 @@ async def audit.write(
 
 ## 通知服务
 
+> 站内通知是一个全平台共用的横切组件（审核 / 预警 / 知识库 / 测验）。
+
 ```python
 async def send_notification(
     *,
@@ -44,12 +46,16 @@ async def send_notification(
 ```
 
 - 支持外部 `db_session`
-- 审核模块会触发：
-  - `REPORT_RESOLVED`
-  - `REPORT_REJECTED`
-  - `REPORT_TRANSFERRED`
-  - `ANONYMOUS_DECRYPT_ALERT`
-  - `AGGREGATE_ALERT`
+- 通知中心 API：
+  - `GET  /api/v1/notifications/my` — 当前用户通知列表（分页）
+  - `GET  /api/v1/notifications/my/unread-count` — 未读数（铃铛红点轮询）
+  - `PATCH /api/v1/notifications/{id}/read` — 标记单条已读
+  - `PATCH /api/v1/notifications/my/read-all` — 一键全部已读
+- 典型通知类型（type 字段示例）：
+  - 审核模块：`REPORT_RESOLVED` / `REPORT_REJECTED` / `REPORT_TRANSFERRED`
+  - 预警模块：`WARNING_PUBLISHED`
+  - 知识库模块：`KB_APPROVED` / `KB_REJECTED`
+  - 测验模块（UC-05 / UC-09）：`QUIZ_ASSIGNED` / `QUIZ_DEADLINE_REMINDER`
 
 ## 知识库草稿适配
 

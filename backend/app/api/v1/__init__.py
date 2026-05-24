@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from app.api.v1 import (
     _examples,
     admin_knowledge,
+    admin_quiz,
     admin_reports,
     admin_warnings,
     audit,
@@ -14,6 +15,8 @@ from app.api.v1 import (
     fraud_types,
     judicial,
     knowledge,
+    notifications,
+    quiz,
     reports,
     users,
     warnings,
@@ -39,5 +42,10 @@ def build_v1_router() -> APIRouter:
     # UC-04 / UC-08：知识库
     router.include_router(knowledge.router)
     router.include_router(admin_knowledge.router)
+    # UC-05 / UC-09：安全测验（题库、随机练习、指定测验、完成率报告）
+    router.include_router(quiz.router)
+    router.include_router(admin_quiz.router)
+    # 公共组件：站内通知中心（被审核 / 预警 / 知识库 / 测验 全员调用）
+    router.include_router(notifications.router)
     router.include_router(_examples.router)
     return router

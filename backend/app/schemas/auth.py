@@ -30,6 +30,7 @@ class WhoAmIOut(BaseModel):
     real_name: str
     role_id: int
     role_code: str
+    role_level: int
     department_id: int
     permissions: list[str]
     session_expires_in_seconds: int

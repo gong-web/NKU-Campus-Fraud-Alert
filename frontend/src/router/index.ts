@@ -99,6 +99,31 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/student/KnowledgeDetailPage.vue"),
         meta: { title: "知识详情" },
       },
+      // UC-05 / UC-09：安全测验
+      {
+        path: "quiz",
+        name: "quiz-entry",
+        component: () => import("@/pages/student/QuizEntryPage.vue"),
+        meta: { title: "安全测验" },
+      },
+      {
+        path: "quiz/attempts/:attempt_id",
+        name: "quiz-answer",
+        component: () => import("@/pages/student/QuizAnswerPage.vue"),
+        meta: { title: "答题" },
+      },
+      {
+        path: "quiz/wrong",
+        name: "quiz-wrong",
+        component: () => import("@/pages/student/QuizWrongPage.vue"),
+        meta: { title: "我的错题本" },
+      },
+      {
+        path: "quiz/history",
+        name: "quiz-history",
+        component: () => import("@/pages/student/QuizHistoryPage.vue"),
+        meta: { title: "测验历史记录" },
+      },
     ],
   },
   // ── 审核管理员 ───────────────────────────────────────────
@@ -172,6 +197,31 @@ const routes: RouteRecordRaw[] = [
         name: "admin-kb-detail",
         component: () => import("@/pages/admin/KnowledgeDetailPage.vue"),
         meta: { title: "知识条目详情" },
+      },
+      // UC-05 / UC-09：安全测验
+      {
+        path: "quiz",
+        name: "admin-quiz-list",
+        component: () => import("@/pages/admin/QuizListPage.vue"),
+        meta: { title: "安全测验" },
+      },
+      {
+        path: "quiz/bank",
+        name: "admin-quiz-bank",
+        component: () => import("@/pages/admin/QuizQuestionBankPage.vue"),
+        meta: { title: "题库管理" },
+      },
+      {
+        path: "quiz/new",
+        name: "admin-quiz-new",
+        component: () => import("@/pages/admin/QuizAssignWizardPage.vue"),
+        meta: { title: "发起测验" },
+      },
+      {
+        path: "quiz/:quiz_id",
+        name: "admin-quiz-report",
+        component: () => import("@/pages/admin/QuizReportPage.vue"),
+        meta: { title: "测验完成率报告" },
       },
     ],
   },

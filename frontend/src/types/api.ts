@@ -8,6 +8,7 @@ export interface WhoAmI {
   real_name: string;
   role_id: number;
   role_code: "STUDENT" | "REVIEWER" | "SYS_ADMIN";
+  role_level: number;
   department_id: number;
   permissions: string[];
   session_expires_in_seconds: number;

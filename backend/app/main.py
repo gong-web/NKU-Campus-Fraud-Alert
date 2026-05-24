@@ -24,6 +24,7 @@ from app.infra.db.session import dispose_engine, uow
 from app.infra.repositories.role import RoleRepository
 from app.tasks.aggregate_alert import start_aggregate_alert_scheduler, stop_aggregate_alert_scheduler
 from app.tasks.draft_cleanup import run_draft_cleanup_loop
+from app.tasks.quiz_reminder import start_quiz_reminder_scheduler, stop_quiz_reminder_scheduler
 
 logger = get_logger(__name__)
 
@@ -57,11 +58,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # 启动草稿清理后台任务（UC-01：每 24 小时清理 30 天前的草稿）
     cleanup_task = asyncio.create_task(run_draft_cleanup_loop())
     start_aggregate_alert_scheduler()
+    start_quiz_reminder_scheduler()
 
     yield
 
     cleanup_task.cancel()
     stop_aggregate_alert_scheduler()
+    stop_quiz_reminder_scheduler()
     logger.info("app_shutting_down")
     await close_redis()
     await dispose_engine()

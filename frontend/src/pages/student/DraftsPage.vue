@@ -31,7 +31,13 @@ async function deleteDraft(id: string) {
 }
 
 function formatDate(s: string) {
-  return new Date(s).toLocaleDateString("zh-CN");
+  const dt = new Date(s);
+  return new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(dt);
 }
 
 function daysLeft(expires: string) {
