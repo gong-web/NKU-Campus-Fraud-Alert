@@ -143,9 +143,13 @@ async function submitAction(): Promise<void> {
     if (error instanceof ApiError && error.httpStatus === 409) {
       ElMessage.warning("该事件已被其他管理员处理，请刷新页面");
     } else if (error instanceof ApiError && error.httpStatus === 422) {
-      ElMessage.warning("提交内容未通过校验，请检查必填项");
+      ElMessage.warning(error.message || "提交内容未通过校验，请检查必填项");
+    } else if (error instanceof ApiError) {
+      ElMessage.error(error.message || "提交失败，请稍后重试");
     } else if (error instanceof Error) {
       ElMessage.error(error.message || "处理失败，请稍后重试");
+    } else {
+      ElMessage.error("处理失败，请稍后重试");
     }
   } finally {
     actionLoading.value = false;
@@ -307,7 +311,7 @@ onBeforeUnmount(closeViewer);
             v-model="resolveForm.identification_points"
             type="textarea"
             :rows="3"
-            placeholder="填写识别要点"
+            placeholder="填写学生可识别的风险要点"
           />
         </ElFormItem>
         <ElFormItem label="防范建议" required>
@@ -315,11 +319,16 @@ onBeforeUnmount(closeViewer);
             v-model="resolveForm.prevention_advice"
             type="textarea"
             :rows="3"
-            placeholder="填写防范建议"
+            placeholder="填写可执行的防范建议"
           />
         </ElFormItem>
         <ElFormItem label="内部备注">
-          <ElInput v-model="resolveForm.internal_remark" type="textarea" :rows="2" />
+          <ElInput
+            v-model="resolveForm.internal_remark"
+            type="textarea"
+            :rows="2"
+            placeholder="填写内部备注（可选）"
+          />
         </ElFormItem>
       </ElForm>
       <ElForm v-else-if="dialogMode === 'reject'" label-position="top">
@@ -332,7 +341,12 @@ onBeforeUnmount(closeViewer);
           />
         </ElFormItem>
         <ElFormItem label="内部备注">
-          <ElInput v-model="rejectForm.internal_remark" type="textarea" :rows="2" />
+          <ElInput
+            v-model="rejectForm.internal_remark"
+            type="textarea"
+            :rows="2"
+            placeholder="填写内部备注（可选）"
+          />
         </ElFormItem>
       </ElForm>
       <ElForm v-else-if="dialogMode === 'transfer'" label-position="top">
@@ -341,11 +355,16 @@ onBeforeUnmount(closeViewer);
             v-model="transferForm.transfer_note"
             type="textarea"
             :rows="4"
-            placeholder="填写转报说明"
+            placeholder="填写转报警说明"
           />
         </ElFormItem>
         <ElFormItem label="内部备注">
-          <ElInput v-model="transferForm.internal_remark" type="textarea" :rows="2" />
+          <ElInput
+            v-model="transferForm.internal_remark"
+            type="textarea"
+            :rows="2"
+            placeholder="填写内部备注（可选）"
+          />
         </ElFormItem>
       </ElForm>
       <template #footer>

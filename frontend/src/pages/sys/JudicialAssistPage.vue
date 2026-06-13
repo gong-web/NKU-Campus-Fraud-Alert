@@ -166,7 +166,7 @@ async function revealNow(): Promise<void> {
         <template #header>
           <div>
             <h3>申请协助解密</h3>
-            <small>普通审核员始终看不到匿名身份，只有系统管理员可发起临时授权查看。</small>
+            <small>普通审核员始终看不到匿名身份；系统管理员申请和查看都会留痕。</small>
           </div>
           <AppButton
             v-if="isDemoMode"
