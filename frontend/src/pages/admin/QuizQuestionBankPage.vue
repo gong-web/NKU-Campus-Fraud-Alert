@@ -196,7 +196,6 @@
             v-model="form.fraud_type_id"
             filterable
             clearable
-            placeholder="选择诈骗类型"
             class="dark-red-select"
             style="width: 260px"
             popper-class="dark-red-popper"

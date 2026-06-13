@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 
 from app.api.deps import require_permission
+from app.api.response_headers import content_disposition
 from app.domain.user_snapshot import UserSnapshot
 from app.infra.db.session import uow
 from app.infra.repositories.audit import AuditRepository
@@ -84,13 +85,20 @@ async def export_audit_logs(
     current: Annotated[UserSnapshot, Depends(require_permission(perm.AUDIT_EXPORT))],
     op_type: Annotated[str | None, Query(max_length=64)] = None,
     operator_id: Annotated[int | None, Query()] = None,
+    object_type: Annotated[str | None, Query(max_length=32)] = None,
+    object_id: Annotated[str | None, Query(max_length=64)] = None,
     start: Annotated[datetime | None, Query()] = None,
     end: Annotated[datetime | None, Query()] = None,
 ) -> StreamingResponse:
     async with uow() as session:
         repo = AuditRepository(session)
         rows = await repo.export_csv_rows(
-            op_type=op_type, operator_id=operator_id, start=start, end=end
+            op_type=op_type,
+            operator_id=operator_id,
+            object_type=object_type,
+            object_id=object_id,
+            start=start,
+            end=end,
         )
     buf = StringIO()
     writer = csv.DictWriter(
@@ -114,11 +122,27 @@ async def export_audit_logs(
         op_type="AUDIT_EXPORT",
         obj_type="audit",
         obj_id=f"export:{len(rows)}",
-        after={"row_count": len(rows), "filters": {"op_type": op_type, "operator_id": operator_id}},
+        after={
+            "row_count": len(rows),
+            "filters": {
+                "op_type": op_type,
+                "operator_id": operator_id,
+                "object_type": object_type,
+                "object_id": object_id,
+            },
+        },
         sync=True,
     )
+    payload = buf.getvalue().encode("utf-8-sig")
     return StreamingResponse(
-        iter([buf.getvalue()]),
+        iter([payload]),
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": 'attachment; filename="audit_logs.csv"'},
+        headers={
+            "Content-Disposition": content_disposition(
+                "audit_logs.csv",
+                disposition="attachment",
+                fallback_filename="audit_logs.csv",
+            ),
+            "Cache-Control": "no-store",
+        },
     )

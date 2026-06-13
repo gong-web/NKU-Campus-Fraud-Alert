@@ -490,6 +490,7 @@ docker compose exec -T backend python -m app.infra.db.seed
 1. 使用 `reviewer_school001`。
 2. 点击“安全测验”。
 3. 指出题库管理、发起测验、状态筛选和完成率报告入口。
+4. 发起指定测验时至少选择 3 道题；随机练习仍固定抽取 10 道题。
 
 讲解：
 
@@ -559,10 +560,34 @@ docker compose exec -T backend python -m app.infra.db.seed
 2. 按操作类型选择登录、创建账号、司法解密等。
 3. 按对象类型和对象编号筛选。
 4. 点击“导出 CSV”。
+5. 确认浏览器下载 `audit_logs.csv`，页面保持在审计日志列表。
 
 讲解：
 
 “高敏操作都会写审计，包括登录、账号变更、状态流转、查看证据、发布预警、导出审计本身。审计日志还带 trace id，便于排查一次请求的全链路。”
+
+导出故障排查：
+
+- 正常结果是浏览器下载 CSV，页面不会跳走。
+- 如果页面跳到 `localhost` 的 HTTP 500，检查前端容器日志是否包含 `http proxy error` 和 `ECONNREFUSED`。
+- Docker 环境的 Vite 代理目标必须是 `http://backend:8000`，不能写容器内的 `http://localhost:8000`。
+- CSV 使用 UTF-8 BOM，Excel 可直接识别中文；导出会沿用当前操作类型、对象类型、对象编号和操作人筛选条件。
+
+其他导出与文件查看检查：
+
+| 功能 | 正常结果 | 常见异常与处理 |
+| --- | --- | --- |
+| 测验完成率报告 XLSX | 下载 `.xlsx`，可打开“完成率报告”工作表 | 后端日志出现 `No module named openpyxl` 时，重新构建后端镜像；Dockerfile 已固定安装 `openpyxl` |
+| 草稿证据查看 | 当前学生可打开本人草稿证据 | 404 通常表示草稿或文件编号不匹配；403 表示不是草稿所有者 |
+| 审核证据查看 | 有证据查看权限的审核员确认敏感访问后打开文件 | 未带敏感访问确认头会被拒绝，这是权限保护，不是下载故障 |
+| 中文下载文件名 | 浏览器使用响应中的中文或业务文件名 | 跨域环境需暴露 `Content-Disposition`；当前后端已配置 |
+
+快速检查命令：
+
+```powershell
+docker compose exec -T backend python -c "import openpyxl; print(openpyxl.__version__)"
+docker compose logs --tail=100 backend frontend
+```
 
 截图：
 

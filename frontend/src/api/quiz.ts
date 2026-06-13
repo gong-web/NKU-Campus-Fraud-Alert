@@ -1,5 +1,6 @@
 import http from "./http";
 import type { PaginationOut } from "@/types/api";
+import { downloadBlob } from "@/utils/download";
 import type {
   AssignedQuizCreateBody,
   QuestionAdmin,
@@ -98,24 +99,11 @@ export const quizApi = {
   },
   async downloadReport(quizId: string): Promise<void> {
     const r = await http.get(this.reportExportUrl(quizId), { responseType: "blob" });
-    const blob = r.data as unknown as Blob;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const cd = ((r.headers?.["content-disposition"] ?? "") as string);
-    const star = /filename\*=UTF-8''([^;]+)/i.exec(cd);
-    const plain = /filename="?([^";]+)"?/i.exec(cd);
-    let filename = `quiz_report_${quizId}.xlsx`;
-    if (star?.[1]) {
-      try { filename = decodeURIComponent(star[1]); } catch { /* keep default */ }
-    } else if (plain?.[1]) {
-      filename = plain[1];
-    }
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    downloadBlob(
+      r.data as unknown as Blob,
+      r.headers?.["content-disposition"] as string | undefined,
+      `quiz_report_${quizId}.xlsx`,
+    );
   },
 };
 

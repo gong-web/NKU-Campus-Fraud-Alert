@@ -99,14 +99,16 @@
             <AppIcon name="search" :size="14" />
             搜索
           </AppButton>
-          <span class="wizard__qsel-count">已选 <strong>{{ form.question_ids.length }}</strong> 题</span>
+          <span class="wizard__qsel-count">
+            至少选择 3 道题 · 已选 <strong>{{ form.question_ids.length }}</strong> 题
+          </span>
         </div>
         <ElTable :data="questions" v-loading="loadingQs" class="wizard__table">
           <ElTableColumn label="选择" width="56" align="center">
             <template #default="{ row }">
               <ElCheckbox 
                 :model-value="isSelected(row)" 
-                @change="(val: boolean) => toggleQuestion(row, val)"
+                @change="(val) => toggleQuestion(row, Boolean(val))"
               />
             </template>
           </ElTableColumn>
@@ -372,8 +374,8 @@ function nextStep(): void {
       return; 
     }
   } else if (step.value === 2) {
-    if (form.question_ids.length < 10) {
-      ElMessage.warning("请至少选择 10 道题");
+    if (form.question_ids.length < 3) {
+      ElMessage.warning("请至少选择 3 道题");
       return;
     }
   }

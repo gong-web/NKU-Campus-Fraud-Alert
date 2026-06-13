@@ -230,7 +230,7 @@ onMounted(load);
               <td>
                 <AppStatusTag
                   :status="quizStatusTone(row.status)"
-                  :text="QUIZ_STATUS_LABEL[row.status]"
+                  :text="QUIZ_STATUS_LABEL[row.status] || row.status"
                 />
               </td>
               <td class="admin-quiz-list__actions-cell" @click.stop>

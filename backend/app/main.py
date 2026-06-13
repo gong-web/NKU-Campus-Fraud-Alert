@@ -15,6 +15,7 @@ from app.api.middleware import (
     SecurityHeadersMiddleware,
     TraceIdMiddleware,
 )
+from app.api.response_headers import CORS_EXPOSE_HEADERS
 from app.api.v1 import build_v1_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
@@ -22,9 +23,15 @@ from app.infra.cache.client import close_redis
 from app.infra.cache.rbac_cache import RBACCache
 from app.infra.db.session import dispose_engine, uow
 from app.infra.repositories.role import RoleRepository
-from app.tasks.aggregate_alert import start_aggregate_alert_scheduler, stop_aggregate_alert_scheduler
+from app.tasks.aggregate_alert import (
+    start_aggregate_alert_scheduler,
+    stop_aggregate_alert_scheduler,
+)
 from app.tasks.draft_cleanup import run_draft_cleanup_loop
-from app.tasks.quiz_reminder import start_quiz_reminder_scheduler, stop_quiz_reminder_scheduler
+from app.tasks.quiz_reminder import (
+    start_quiz_reminder_scheduler,
+    stop_quiz_reminder_scheduler,
+)
 
 logger = get_logger(__name__)
 
@@ -97,7 +104,7 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["X-Trace-Id"],
+        expose_headers=list(CORS_EXPOSE_HEADERS),
     )
 
     install_error_handlers(app)

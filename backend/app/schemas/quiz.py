@@ -123,7 +123,9 @@ class AssignedQuizCreateIn(BaseModel):
 
     title: str = Field(min_length=1, max_length=128, description="测验标题")
     question_ids: list[int] = Field(
-        min_length=1, max_length=100, description="题目 ID 列表（已选定，按顺序）"
+        min_length=3,
+        max_length=100,
+        description="题目 ID 列表（至少 3 道，按选定顺序）",
     )
     pass_score: int = Field(
         default=60, ge=0, le=100, description="及格分（满分 100）"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
+import { ElMessage } from "element-plus";
 import type { AuditLogOut, PaginationOut } from "@/types/api";
 import { auditApi } from "@/api/audit";
 import {
@@ -22,6 +23,7 @@ const page = ref<number>(1);
 const size = ref<number>(20);
 const data = ref<PaginationOut<AuditLogOut> | null>(null);
 const loading = ref<boolean>(false);
+const exporting = ref<boolean>(false);
 
 async function load(): Promise<void> {
   loading.value = true;
@@ -85,11 +87,21 @@ function opTone(op: string): "info" | "success" | "warning" | "danger" | "neutra
 const totalCount = computed<number>(() => data.value?.total ?? 0);
 const totalPages = computed<number>(() => Math.max(1, Math.ceil(totalCount.value / size.value)));
 
-function exportCsv(): void {
-  const url = new URL("/api/v1/audit-logs/export", window.location.origin);
-  if (filters.op_type) url.searchParams.set("op_type", filters.op_type);
-  if (filters.operator_id != null) url.searchParams.set("operator_id", String(filters.operator_id));
-  window.location.href = url.toString();
+async function exportCsv(): Promise<void> {
+  exporting.value = true;
+  try {
+    await auditApi.exportCsv({
+      ...(filters.op_type ? { op_type: filters.op_type } : {}),
+      ...(filters.operator_id != null ? { operator_id: filters.operator_id } : {}),
+      ...(filters.object_type ? { object_type: filters.object_type } : {}),
+      ...(filters.object_id ? { object_id: filters.object_id } : {}),
+    });
+    ElMessage.success("审计日志 CSV 已导出");
+  } catch {
+    ElMessage.error("导出失败，请稍后重试");
+  } finally {
+    exporting.value = false;
+  }
 }
 
 function shortTrace(t: string | null | undefined): string {
@@ -126,6 +138,7 @@ function shortId(v: unknown): string {
         </span>
         <AppButton
           variant="primary"
+          :loading="exporting"
           @click="exportCsv"
         >
           <AppIcon

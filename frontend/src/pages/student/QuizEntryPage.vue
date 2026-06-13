@@ -222,7 +222,7 @@ onMounted(load);
             <h4 class="quiz-entry__card-title">{{ it.title }}</h4>
             <AppStatusTag
               :status="quizStatusTone(it.status)"
-              :text="QUIZ_STATUS_LABEL[it.status]"
+              :text="QUIZ_STATUS_LABEL[it.status] || it.status"
             />
           </div>
           <p class="quiz-entry__card-summary">

@@ -152,7 +152,7 @@ onMounted(load);
           </AppButton>
           <AppStatusTag
             :status="quizStatusTone(quiz.status)"
-            :text="QUIZ_STATUS_LABEL[quiz.status]"
+            :text="QUIZ_STATUS_LABEL[quiz.status] || quiz.status"
           />
           <AppButton variant="secondary" size="md" @click="downloadXlsx">
             <AppIcon name="download" :size="14" />
