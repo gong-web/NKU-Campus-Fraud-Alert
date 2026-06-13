@@ -10,9 +10,8 @@ PRD 3.4 节关键约束
   ``DECRYPT_ANONYMOUS``。
 - 解密结果触发**全员 SysAdmin 站内信告警**（接通知服务后实现，本服务
   暴露 hook）。
-- 数据库账号 ``app_user`` 对 ``anonymous_mappings`` **无任何权限**——本
-  服务必须在另一连接（``decrypt_user``）下查询；本骨架先用业务连接，
-  在迁移脚本里把权限分离配上后由运维替换连接源。
+- 匿名身份读取统一使用上报流程写入的 ``case_anonymous_reporters``。
+- 接口仍受 ``judicial:request_decrypt`` 权限、5 分钟窗口和审计日志约束。
 """
 
 from __future__ import annotations
@@ -20,6 +19,8 @@ from __future__ import annotations
 import base64
 from datetime import UTC, datetime, timedelta
 from typing import Any
+
+from sqlalchemy import select
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
@@ -32,9 +33,8 @@ from app.exceptions import (
     NotFound,
     PermissionDenied,
 )
-from app.infra.db.models import AnonymousDecryptLog, AnonymousMapping, User
+from app.infra.db.models import AnonymousDecryptLog, CaseAnonymousReporter, User
 from app.infra.db.session import uow
-from app.infra.repositories.anonymous import AnonymousMappingRepository
 from app.services.audit_service import get_audit_service
 
 logger = get_logger(__name__)
@@ -129,12 +129,17 @@ class JudicialService:
             if now >= log_row.expires_at.replace(tzinfo=UTC):
                 raise JudicialWindowExpired()
 
-            mappings = AnonymousMappingRepository(session)
-            mapping: AnonymousMapping | None = await mappings.get_by_report_id(log_row.report_id)
+            mapping = (
+                await session.execute(
+                    select(CaseAnonymousReporter).where(
+                        CaseAnonymousReporter.case_id == log_row.report_id
+                    )
+                )
+            ).scalar_one_or_none()
             if mapping is None:
                 raise NotFound("该事件无匿名映射记录（可能不是匿名上报）")
 
-            real_uid_bytes = decrypt_field(mapping.encrypted_reporter_id)
+            real_uid_bytes = decrypt_field(mapping.reporter_user_id_enc)
             try:
                 real_uid = int(real_uid_bytes.decode("utf-8"))
             except ValueError as exc:

@@ -11,10 +11,12 @@ import asyncio
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import configure_logging, get_logger
 from app.core.snowflake import next_snowflake_id
 from app.infra.cache.rbac_cache import RBACCache
+from app.infra.db.demo_seed import seed_demo_data
 from app.infra.db.models import (
     Department,
     FraudType,
@@ -243,6 +245,9 @@ async def seed_all() -> None:  # noqa: C901 - seed 脚本按步骤串行更容�
 
         # 7. 题库 + 一场示例指定测验（UC-05 / UC-09）
         await _seed_quiz_data(session)
+
+        # 8. 四角色答辩演示数据（案件 / 草稿 / 预警 / 知识 / 测验 / 通知）
+        await seed_demo_data(session)
 
     # 6. RBAC 缓存预热
     async with uow() as session:
@@ -600,8 +605,11 @@ KB_ENTRIES: list[dict[str, str]] = [
 ]
 
 
-async def _seed_knowledge_entries(  # type: ignore[no-untyped-def]
-    session, *, sysadmin, fraud_types_by_code
+async def _seed_knowledge_entries(
+    session: AsyncSession,
+    *,
+    sysadmin: User,
+    fraud_types_by_code: dict[str, FraudType],
 ) -> dict[str, KnowledgeEntry]:
     """灌入示例知识库条目（每类一条 PUBLISHED）。
 
@@ -647,7 +655,7 @@ async def _seed_knowledge_entries(  # type: ignore[no-untyped-def]
     return out
 
 
-async def _seed_quiz_data(session) -> None:  # type: ignore[no-untyped-def]
+async def _seed_quiz_data(session: AsyncSession) -> None:  # noqa: C901
     """灌入示例知识库 + 题库 + 一场面向全校的示例指定测验。
 
     幂等：知识库按 ``title`` 查重，题目按题干文本查重，指定测验按 ``title`` 查重。
@@ -730,11 +738,11 @@ async def _seed_quiz_data(session) -> None:  # type: ignore[no-untyped-def]
             )
             session.add(quiz)
             await session.flush()
-            for idx, q in enumerate(all_questions[:10], start=1):
+            for idx, question in enumerate(all_questions[:10], start=1):
                 session.add(
                     QuizQuestion(
                         quiz_id=quiz.quiz_id,
-                        question_id=q.question_id,
+                        question_id=question.question_id,
                         sort_order=idx,
                     )
                 )
@@ -762,16 +770,16 @@ async def _seed_quiz_data(session) -> None:  # type: ignore[no-untyped-def]
                 status=QuizStatus.ACTIVE,
                 created_by=sysadmin.user_id,
                 deadline_at=datetime.now(UTC).replace(tzinfo=None) + timedelta(days=30),
-                target_scope={"type": QuizScopeType.DEPARTMENT, "department_ids": [2, 4]},
+                target_scope={"type": QuizScopeType.DEPT, "department_ids": [2, 4]},
                 publish_level=2,  # 学校级发布
             )
             session.add(midterm_quiz)
             await session.flush()
-            for idx, q in enumerate(all_questions[:10], start=1):
+            for idx, question in enumerate(all_questions[:10], start=1):
                 session.add(
                     QuizQuestion(
                         quiz_id=midterm_quiz.quiz_id,
-                        question_id=q.question_id,
+                        question_id=question.question_id,
                         sort_order=idx,
                     )
                 )
@@ -809,16 +817,16 @@ async def _seed_quiz_data(session) -> None:  # type: ignore[no-untyped-def]
                 status=QuizStatus.ACTIVE,
                 created_by=cs_reviewer.user_id,
                 deadline_at=datetime.now(UTC).replace(tzinfo=None) + timedelta(days=30),
-                target_scope={"type": QuizScopeType.DEPARTMENT, "department_ids": [cs_dept.dept_id]},
+                target_scope={"type": QuizScopeType.DEPT, "department_ids": [cs_dept.dept_id]},
                 publish_level=1,  # 院级发布，学校级审核员不可见
             )
             session.add(cs_final_quiz)
             await session.flush()
-            for idx, q in enumerate(all_questions[:10], start=1):
+            for idx, question in enumerate(all_questions[:10], start=1):
                 session.add(
                     QuizQuestion(
                         quiz_id=cs_final_quiz.quiz_id,
-                        question_id=q.question_id,
+                        question_id=question.question_id,
                         sort_order=idx,
                     )
                 )

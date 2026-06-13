@@ -41,8 +41,9 @@ GRANT SELECT, INSERT, UPDATE, DELETE
 GRANT SELECT, INSERT
   ON anti_fraud.audit_logs TO 'app_user'@'%';
 
--- App can create decrypt request logs, but cannot read identity mappings.
-GRANT INSERT
+-- App can create and read decrypt request windows, but cannot read the
+-- legacy anonymous_mappings table.
+GRANT SELECT, INSERT
   ON anti_fraud.anonymous_decrypt_logs TO 'app_user'@'%';
 
 -- 0002_yxq_reports: fraud_types / report_drafts / fraud_cases /

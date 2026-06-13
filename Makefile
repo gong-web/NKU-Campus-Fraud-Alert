@@ -66,7 +66,7 @@ new-migration:  ## 生成迁移脚本：make new-migration NAME=add_xxx
 	@test -n "$(NAME)" || (echo "ERROR: NAME required, e.g. make new-migration NAME=add_xxx"; exit 1)
 	$(COMPOSE) exec backend alembic revision --autogenerate -m "$(NAME)"
 
-seed:  ## 灌入种子数据（院系 / 诈骗类型 / 测试账号 / 角色权限矩阵）
+seed:  ## 灌入种子数据（账号权限 + 全状态案件 + 草稿/预警/知识/测验/通知）
 	$(COMPOSE) exec backend python -m app.infra.db.seed
 
 reset:  ## 危险操作：drop → create → migrate → seed

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { EvidenceFileOut, FraudType, ReportCreateIn } from "@/api/reports";
 import { reportsApi } from "@/api/reports";
@@ -25,6 +25,11 @@ const submitLoading = ref(false);
 const draftLoading = ref(false);
 const errorMsg = ref("");
 const currentDraftId = ref<string | null>(null);
+const submitAttempted = ref(false);
+const titleInput = ref<HTMLInputElement | null>(null);
+const fraudTypeSelect = ref<HTMLSelectElement | null>(null);
+const incidentDateInput = ref<HTMLInputElement | null>(null);
+const descriptionInput = ref<HTMLTextAreaElement | null>(null);
 
 const form = ref<ReportCreateIn>({
   title: "",
@@ -42,20 +47,54 @@ const savedEvidence = ref<SavedEvidenceItem[]>([]);
 
 // ── Computed ─────────────────────────────────────────────────────
 const descLength = computed(() => form.value.description.length);
+const titleLength = computed(() => form.value.title.trim().length);
 const descTone = computed(() => {
   if (descLength.value >= 200) return "success";
   if (descLength.value >= 50) return "warning";
   return "normal";
 });
 
-const isFormValid = computed(() => {
-  return (
-    form.value.title.trim().length >= 2 &&
-    form.value.description.trim().length >= 10 &&
-    form.value.fraud_type_id > 0 &&
-    form.value.incident_date !== ""
-  );
+const titleError = computed(() => {
+  if (titleLength.value === 0) return submitAttempted.value ? "请输入标题" : "";
+  if (titleLength.value < 2) return `标题至少 2 个字，还需 ${2 - titleLength.value} 个字`;
+  return "";
 });
+
+const fraudTypeError = computed(() =>
+  submitAttempted.value && form.value.fraud_type_id <= 0 ? "请选择诈骗类型" : "",
+);
+
+const incidentDateError = computed(() =>
+  submitAttempted.value && !form.value.incident_date ? "请选择事发日期" : "",
+);
+
+const descriptionError = computed(() => {
+  const length = form.value.description.trim().length;
+  if (length === 0) return submitAttempted.value ? "请输入事件经过" : "";
+  if (length < 10) return `经过描述至少 10 个字，还需 ${10 - length} 个字`;
+  return "";
+});
+
+const validationIssues = computed<string[]>(() => {
+  const issues: string[] = [];
+  if (titleLength.value < 2) issues.push(titleError.value || "标题至少 2 个字");
+  if (form.value.fraud_type_id <= 0) issues.push("请选择诈骗类型");
+  if (!form.value.incident_date) issues.push("请选择事发日期");
+  if (form.value.description.trim().length < 10) {
+    issues.push(descriptionError.value || "经过描述至少 10 个字");
+  }
+  return issues;
+});
+
+const isFormValid = computed(() => {
+  return validationIssues.value.length === 0;
+});
+
+watch(validationIssues, (issues) => {
+  if (!submitAttempted.value || !errorMsg.value.startsWith("暂时无法提交：")) return;
+  errorMsg.value = issues.length ? `暂时无法提交：${issues.join("；")}` : "";
+});
+
 const totalEvidenceCount = computed(() => pendingFiles.value.length + savedEvidence.value.length);
 const hasAnyEvidence = computed(() => totalEvidenceCount.value > 0);
 
@@ -174,8 +213,30 @@ async function removeSavedFile(fileId: string): Promise<void> {
 }
 
 // ── Submit ────────────────────────────────────────────────────────
+async function focusFirstInvalidField(): Promise<void> {
+  await nextTick();
+  if (titleLength.value < 2) {
+    titleInput.value?.focus();
+    return;
+  }
+  if (form.value.fraud_type_id <= 0) {
+    fraudTypeSelect.value?.focus();
+    return;
+  }
+  if (!form.value.incident_date) {
+    incidentDateInput.value?.focus();
+    return;
+  }
+  descriptionInput.value?.focus();
+}
+
 async function submitReport() {
-  if (!isFormValid.value) return;
+  submitAttempted.value = true;
+  if (!isFormValid.value) {
+    errorMsg.value = `暂时无法提交：${validationIssues.value.join("；")}`;
+    await focusFirstInvalidField();
+    return;
+  }
   errorMsg.value = "";
   submitLoading.value = true;
   try {
@@ -272,9 +333,7 @@ async function saveDraft() {
 <template>
   <div class="report-form">
     <AppPageHeader
-      badge="上报 · UC-01"
       title="我要上报疑似诈骗"
-      subtitle="请如实描述事件经过。个人信息全程加密，可选择匿名上报。"
     />
 
     <div class="report-form__layout">
@@ -304,12 +363,22 @@ async function saveDraft() {
               <span class="required">*</span>
             </label>
             <input
+              ref="titleInput"
               v-model="form.title"
               type="text"
               class="report-form__input"
+              :class="{ 'report-form__input--error': Boolean(titleError) }"
               placeholder="一句话描述事件（2-200 字）"
               maxlength="200"
+              :aria-invalid="Boolean(titleError)"
             >
+            <div class="report-form__field-meta">
+              <span
+                v-if="titleError"
+                class="report-form__field-error"
+              >{{ titleError }}</span>
+              <span v-else>{{ titleLength }} / 200 字</span>
+            </div>
           </div>
 
           <div class="report-form__row">
@@ -319,9 +388,12 @@ async function saveDraft() {
                 <span class="required">*</span>
               </label>
               <select
+                ref="fraudTypeSelect"
                 v-model="form.fraud_type_id"
                 class="report-form__select"
+                :class="{ 'report-form__input--error': Boolean(fraudTypeError) }"
                 :disabled="loading"
+                :aria-invalid="Boolean(fraudTypeError)"
               >
                 <option
                   :value="0"
@@ -337,6 +409,10 @@ async function saveDraft() {
                   {{ t.type_name }}
                 </option>
               </select>
+              <span
+                v-if="fraudTypeError"
+                class="report-form__field-error"
+              >{{ fraudTypeError }}</span>
             </div>
 
             <div class="report-form__field">
@@ -345,11 +421,18 @@ async function saveDraft() {
                 <span class="required">*</span>
               </label>
               <input
+                ref="incidentDateInput"
                 v-model="form.incident_date"
                 type="date"
                 class="report-form__input"
+                :class="{ 'report-form__input--error': Boolean(incidentDateError) }"
                 :max="new Date().toISOString().split('T')[0]"
+                :aria-invalid="Boolean(incidentDateError)"
               >
+              <span
+                v-if="incidentDateError"
+                class="report-form__field-error"
+              >{{ incidentDateError }}</span>
             </div>
           </div>
 
@@ -388,25 +471,24 @@ async function saveDraft() {
               <span class="required">*</span>
             </label>
             <textarea
+              ref="descriptionInput"
               v-model="form.description"
               class="report-form__textarea"
+              :class="{ 'report-form__input--error': Boolean(descriptionError) }"
               placeholder="请详细描述事件经过，包括时间、地点、对方说了什么、您做了什么等（建议 200 字以上）"
               rows="8"
               maxlength="5000"
+              :aria-invalid="Boolean(descriptionError)"
             />
             <div
               class="report-form__char-count"
               :class="`report-form__char-count--${descTone}`"
             >
-              <span>已输入 {{ descLength }} 字</span>
               <span
-                v-if="descLength < 200"
-                class="report-form__char-hint"
-              >（建议至少 200 字，有助于审核）</span>
-              <span
-                v-else
-                class="report-form__char-ok"
-              >✓ 字数充分</span>
+                v-if="descriptionError"
+                class="report-form__field-error"
+              >{{ descriptionError }}</span>
+              <span v-else>{{ descLength }} / 5000 字</span>
             </div>
           </div>
         </section>
@@ -473,7 +555,6 @@ async function saveDraft() {
                   />
                 </button>
                 <span class="report-form__preview-name">{{ item.original_name }}</span>
-                <span class="report-form__preview-tag">已保存</span>
               </div>
 
               <div
@@ -507,7 +588,6 @@ async function saveDraft() {
                   />
                 </button>
                 <span class="report-form__preview-name">{{ item.file.name }}</span>
-                <span class="report-form__preview-tag report-form__preview-tag--pending">待保存</span>
               </div>
             </div>
           </div>
@@ -525,7 +605,7 @@ async function saveDraft() {
             >
             <span>
               <strong>匿名上报</strong>
-              <small>您的真实姓名与学号将加密存储，仅司法授权场景可解密，普通审核员看不到您的身份</small>
+              <small>身份加密存储，审核员无法查看</small>
             </span>
           </label>
 
@@ -545,6 +625,17 @@ async function saveDraft() {
         </section>
 
         <!-- 操作按钮 -->
+        <div
+          v-if="validationIssues.length"
+          class="report-form__validation-summary"
+          role="status"
+        >
+          <AppIcon name="info" :size="15" />
+          <div>
+            <strong>完成以下内容后即可提交</strong>
+            <span>{{ validationIssues.join("；") }}</span>
+          </div>
+        </div>
         <div class="report-form__actions">
           <AppButton
             variant="ghost"
@@ -559,8 +650,8 @@ async function saveDraft() {
           </AppButton>
           <AppButton
             variant="primary"
-            :disabled="!isFormValid"
             :loading="submitLoading"
+            :aria-label="isFormValid ? '提交上报' : `提交上报，当前还需：${validationIssues.join('；')}`"
             @click="submitReport"
           >
             <AppIcon
@@ -572,62 +663,11 @@ async function saveDraft() {
         </div>
       </AppCard>
 
-      <!-- 侧边提示 -->
       <aside class="report-form__tips">
-        <AppCard padding="md">
-          <template #header>
-            <div class="report-form__tips-title">
-              <AppIcon
-                name="info"
-                :size="16"
-              />
-              填写提示
-            </div>
-          </template>
-          <ul class="report-form__tips-list">
-            <li>
-              <AppIcon
-                name="shield-check"
-                :size="14"
-              />
-              实名信息加密存储，仅司法授权下可解密
-            </li>
-            <li>
-              <AppIcon
-                name="clock"
-                :size="14"
-              />
-              提交后 24 小时内会有审核员处理
-            </li>
-            <li>
-              <AppIcon
-                name="bell"
-                :size="14"
-              />
-              状态变更时会收到站内通知
-            </li>
-            <li>
-              <AppIcon
-                name="file-text"
-                :size="14"
-              />
-              描述越详细，处理越高效
-            </li>
-          </ul>
-        </AppCard>
-
-        <AppCard
-          padding="md"
-          class="report-form__urgent-card"
-        >
-          <p class="report-form__urgent">
-            <AppIcon
-              name="siren"
-              :size="16"
-            />
-            <strong>如财产损失较大或人身安全受威胁，请立即拨打 110 报警！</strong>
-          </p>
-        </AppCard>
+        <p class="report-form__urgent">
+          <AppIcon name="siren" :size="16" />
+          涉及财产损失或人身安全，请立即拨打 <a href="tel:110">110</a>
+        </p>
       </aside>
     </div>
   </div>
@@ -642,15 +682,9 @@ async function saveDraft() {
 
 .report-form__layout {
   display: grid;
-  grid-template-columns: 1fr 280px;
-  gap: var(--space-5);
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
   align-items: start;
-}
-
-@media (width <= 1024px) {
-  .report-form__layout {
-    grid-template-columns: 1fr;
-  }
 }
 
 .report-form__section {
@@ -735,6 +769,29 @@ async function saveDraft() {
 .report-form__textarea:focus {
   border-color: var(--color-brand-500);
   box-shadow: 0 0 0 3px rgb(134 38 51 / 10%);
+}
+
+.report-form__input--error {
+  border-color: var(--color-danger);
+  background: rgb(198 40 40 / 2%);
+}
+
+.report-form__input--error:focus {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgb(198 40 40 / 10%);
+}
+
+.report-form__field-meta {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 18px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.report-form__field-error {
+  color: var(--color-danger);
+  font-weight: var(--font-weight-medium);
 }
 
 .report-form__textarea {
@@ -905,6 +962,34 @@ async function saveDraft() {
 }
 
 /* Actions */
+.report-form__validation-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgb(197 123 0 / 24%);
+  border-radius: var(--radius-md);
+  background: rgb(197 123 0 / 6%);
+  color: var(--color-warning);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}
+
+.report-form__validation-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.report-form__validation-summary strong {
+  color: var(--color-text-strong);
+  font-size: var(--font-size-sm);
+}
+
+.report-form__validation-summary span {
+  color: var(--color-text-secondary);
+}
+
 .report-form__actions {
   display: flex;
   justify-content: flex-end;
@@ -927,60 +1012,25 @@ async function saveDraft() {
   margin-bottom: var(--space-4);
 }
 
-/* Urgent warning card */
-.report-form__urgent-card {
-  background: rgb(255 243 205 / 80%);
-  border-color: rgb(230 162 0 / 30%);
-}
-
-/* Tips sidebar */
 .report-form__tips {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  position: sticky;
-  top: 80px;
-}
-
-.report-form__tips-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-strong);
-}
-
-.report-form__tips-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.report-form__tips-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  line-height: 1.6;
-}
-
-.report-form__tips-list li svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--color-brand-500);
+  margin-top: var(--space-2);
 }
 
 .report-form__urgent {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-2);
   margin: 0;
-  font-size: var(--font-size-xs);
-  line-height: 1.6;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgb(198 40 40 / 6%);
+  border: 1px solid rgb(198 40 40 / 18%);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.report-form__urgent a {
+  color: var(--color-danger);
+  font-weight: var(--font-weight-semibold);
 }
 </style>

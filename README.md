@@ -72,7 +72,7 @@ make migrate && make seed
 | `make down`           | 关停所有服务                                                          |
 | `make logs`           | 跟随所有服务日志（`make logs s=backend` 跟随单服务）                  |
 | `make migrate`        | 运行 Alembic 数据库迁移                                               |
-| `make seed`           | 种子数据：5 院系 + 8 诈骗类型 + 测试账号                              |
+| `make seed`           | 种子数据：账号权限 + 全状态案件 + 草稿/预警/知识/测验/通知             |
 | `make reset`          | 一键重置：drop → create → migrate → seed                             |
 | `make new-migration NAME=add_xxx` | 生成一个新的 Alembic 迁移脚本                              |
 | `make test`           | 后端 + 前端全套测试                                                   |
@@ -106,6 +106,8 @@ make migrate && make seed
 | [api-guide](docs/api-guide.md)                    | 5 步教程：如何添加一个新接口                          |
 | [error-codes](docs/error-codes.md)                | 错误码字典（按业务域分号段）                          |
 | [permissions](docs/permissions.md)                | 全平台权限码清单                                      |
+| [demo-feature-checklist](docs/demo-feature-checklist.md) | 完整功能演示清单、角色脚本与验收项              |
+| [demo-runbook-detailed](docs/demo-runbook-detailed.md) | 精细化实操演示手册（点击步骤 / 讲解话术 / 截图） |
 | [risks](docs/risks.md)                            | 风险登记册（每周更新）                                |
 | [adr/](docs/adr/)                                 | 架构决策记录（≥ 8 篇）                                |
 | [CHANGELOG](CHANGELOG.md)                         | 发版变更日志（Keep a Changelog 格式）                 |

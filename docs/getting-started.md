@@ -71,8 +71,14 @@ xdg-open http://localhost:5173
 - 1 个 SysAdmin：`sysadmin001`
 - 2 个 Reviewer：`reviewer_dept001`（院系级） / `reviewer_school001`（校级）
 - 5 个 Student：`student001` ~ `student005`
+- 8 条覆盖全部案件状态的演示上报（其中 1 条为匿名案件）
+- 草稿、预警、知识审核状态、测验历史、错题和站内通知
 
 打开 `http://localhost:5173` → **Mock 登录** → 输入任一账号 → 跳到对应工作台。
+
+司法协助演示可直接使用事件 ID `990000000000000005` 和案件编号
+`2026-CS-900005`。seed 可重复执行且不会重复插入；若要把已经操作过的
+演示数据恢复到初始状态，需要执行会清空数据库的 `make reset`。
 
 ---
 
