@@ -35,6 +35,7 @@ LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 LogFormat = Literal["console", "json"]
 AuthProvider = Literal["mock", "real"]
 KMSProvider = Literal["local", "vault", "aws"]
+StorageBackend = Literal["local", "s3"]
 
 
 class DatabaseSettings(BaseModel):
@@ -116,12 +117,17 @@ class KMSSettings(BaseModel):
 class StorageSettings(BaseModel):
     """对象存储（证据文件加密落盘）。"""
 
+    backend: StorageBackend = Field(default="local", description="local 或 s3")
     endpoint: str = Field(default="http://minio:9000")
     access_key: SecretStr = Field(default=SecretStr("minioadmin"))
     secret_key: SecretStr = Field(default=SecretStr("minioadmin123"))
     bucket: str = Field(default="evidence")
     region: str = Field(default="us-east-1")
     use_ssl: bool = Field(default=False)
+    server_side_encryption: bool = Field(
+        default=False,
+        description="是否请求对象存储侧 SSE；应用层已先完成 AES-GCM 加密",
+    )
 
 
 class SnowflakeSettings(BaseModel):
@@ -216,11 +222,13 @@ class Settings(BaseSettings):
     kms_data_key_version: str = "v1"
 
     s3_endpoint: str = "http://minio:9000"
+    storage_backend: StorageBackend = "local"
     s3_access_key: SecretStr = SecretStr("minioadmin")
     s3_secret_key: SecretStr = SecretStr("minioadmin123")
     s3_bucket: str = "evidence"
     s3_region: str = "us-east-1"
     s3_use_ssl: bool = False
+    s3_server_side_encryption: bool = False
 
     snowflake_datacenter_id: int = 1
     snowflake_worker_id: int = 1
@@ -291,12 +299,14 @@ class Settings(BaseSettings):
     @property
     def storage(self) -> StorageSettings:
         return StorageSettings(
+            backend=self.storage_backend,
             endpoint=self.s3_endpoint,
             access_key=self.s3_access_key,
             secret_key=self.s3_secret_key,
             bucket=self.s3_bucket,
             region=self.s3_region,
             use_ssl=self.s3_use_ssl,
+            server_side_encryption=self.s3_server_side_encryption,
         )
 
     @property
@@ -334,22 +344,27 @@ class Settings(BaseSettings):
     def cors_allow_origins_list(self) -> list[str]:
         return [s.strip() for s in self.cors_allow_origins.split(",") if s.strip()]
 
+    def _check_prod_settings(self) -> None:
+        if self.debug:
+            raise ValueError("DEBUG=true 不允许在生产环境启用")
+        if self.auth_provider != "real":
+            raise ValueError("生产环境必须使用 real CAS provider")
+        if not self.session_cookie_secure:
+            raise ValueError("生产环境必须开启 SESSION_COOKIE_SECURE")
+        if self.kms_provider == "local":
+            raise ValueError("生产环境必须使用 vault / aws KMS，禁止 local")
+        if self.storage_backend != "s3":
+            raise ValueError("生产环境必须使用 S3/MinIO 对象存储，禁止本地证据目录")
+        if self.openapi_enabled:
+            raise ValueError("生产环境应关闭 OPENAPI_ENABLED 或加管理员鉴权保护")
+        if any(host in self.database_url for host in ("localhost", "127.0.0.1")):
+            raise ValueError("生产环境不允许使用 localhost 数据库")
+
     @model_validator(mode="after")
     def _check_prod_invariants(self) -> Settings:
         """生产环境硬性约束（缺一不可）。"""
         if self.app_env == "prod":
-            if self.debug:
-                raise ValueError("DEBUG=true 不允许在生产环境启用")
-            if self.auth_provider != "real":
-                raise ValueError("生产环境必须使用 real CAS provider")
-            if not self.session_cookie_secure:
-                raise ValueError("生产环境必须开启 SESSION_COOKIE_SECURE")
-            if self.kms_provider == "local":
-                raise ValueError("生产环境必须使用 vault / aws KMS，禁止 local")
-            if self.openapi_enabled:
-                raise ValueError("生产环境应关闭 OPENAPI_ENABLED 或加管理员鉴权保护")
-            if any(host in self.database_url for host in ("localhost", "127.0.0.1")):
-                raise ValueError("生产环境不允许使用 localhost 数据库")
+            self._check_prod_settings()
         # cas_service_url 必须在白名单内（防开放重定向）
         if self.cas_service_whitelist:
             allow = [s.strip() for s in self.cas_service_whitelist.split(",") if s.strip()]

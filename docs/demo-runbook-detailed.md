@@ -78,11 +78,13 @@ docker compose exec -T backend python -m app.infra.db.seed
 1. 在项目根目录执行 `docker compose up -d --remove-orphans`。
 2. 执行 `docker compose exec -T backend alembic upgrade head`。
 3. 执行 `docker compose exec -T backend python -m app.infra.db.seed`。
-4. 打开前端 `http://localhost:5173`。
+4. 如需展示统一入口，执行 `docker compose --profile edge up -d edge`，访问 `https://localhost:8443/healthz`。
+5. 如需展示监控面板，执行 `docker compose --profile observability up -d prometheus grafana`。
+6. 打开前端 `http://localhost:5173`。
 
 讲解：
 
-“这个项目是前后端分离的校园反诈平台。演示环境使用 Mock CAS，不需要接真实统一身份认证。后端、前端、MySQL、Redis 和 MinIO 基础服务都通过 Docker Compose 一键拉起。当前证据文件会先加密再写入后端本地目录，MinIO/S3 适配属于生产化扩展。”
+“这个项目是前后端分离的校园反诈平台。演示环境使用 Mock CAS，不需要接真实统一身份认证。后端、前端、MySQL、Redis 和 MinIO 基础服务都通过 Docker Compose 一键拉起。当前 Docker 演示环境中，证据文件会先加密，再写入 MinIO/S3 对象存储；测试环境也可以切换为本地加密目录。”
 
 验收点：
 
@@ -95,8 +97,8 @@ docker compose exec -T backend python -m app.infra.db.seed
 建议按图从上到下这样介绍：
 
 > 学生和管理人员通过浏览器访问 Vue 3 前端，前端负责交互、表单校验和状态
-> 展示。当前演示环境通过 HTTP 直接访问 Vite 和 FastAPI；在生产部署设计中，
-> 统一由 Nginx 或负载均衡入口接收 HTTPS 请求，完成 TLS 终止和反向代理，
+> 展示。普通演示可以通过 HTTP 直接访问 Vite 和 FastAPI；如需展示统一入口，
+> 可启用 `edge` profile，由 Nginx 接收 HTTPS 请求，完成 TLS 终止和反向代理，
 > 避免应用服务直接暴露。
 >
 > 请求随后进入 FastAPI 应用层。登录会话保存在共享 Redis 中，不依赖某一台
@@ -108,10 +110,9 @@ docker compose exec -T backend python -m app.infra.db.seed
 > 异步审计。生产目标可以扩展为 MySQL 主库和只读副本，但本项目目前没有实现
 > 主从复制与读写分离。
 >
-> 证据文件在写入存储前会进行 AES-256-GCM 加密。当前实现写入后端本地证据
-> 目录，Docker Compose 中的 MinIO 是为对象存储适配预留的基础服务；生产化
-> 后可把加密后的文件写入 MinIO 或兼容 S3 的对象存储，避免把大文件放进关系
-> 数据库。
+> 证据文件在写入存储前会进行 AES-256-GCM 加密。Docker 演示环境默认写入
+> MinIO/S3，测试环境可切换到本地加密目录；这样既避免把大文件放进关系数据库，
+> 也便于在没有对象存储的测试环境中快速验证功能。
 >
 > 密钥管理采用可切换的 KMS 抽象。演示环境使用 LocalKMS，从环境变量主密钥
 > 派生数据密钥；Vault 和 AWS KMS Provider 当前是占位实现，正式部署必须接入
@@ -119,7 +120,8 @@ docker compose exec -T backend python -m app.infra.db.seed
 > 演示默认使用 Mock CAS，不能表述为已经接通学校真实 CAS。
 >
 > 可观测性方面，后端已提供 Prometheus `/metrics` 指标端点，并输出结构化
-> 日志；Grafana 和集中日志平台属于生产部署目标，当前 Compose 没有启动。
+> 日志；Prometheus 和 Grafana 可通过 `observability` profile 启动，集中日志
+> 平台仍属于生产部署接入项。
 > 指标和应用日志采集可以旁路进行，但高敏审计会与业务事务同步写入，失败时
 > 会阻止操作完成，因此不能把所有审计都描述成完全不阻塞主链路。
 
@@ -128,25 +130,25 @@ docker compose exec -T backend python -m app.infra.db.seed
 | 原表述 | 结论 | 演示时如何修正 |
 | --- | --- | --- |
 | 浏览器访问 Vue 3，前端负责交互、校验和展示 | 准确 | 可原样保留 |
-| HTTPS 进入 Nginx，完成 TLS 终止和反向代理 | 仅生产目标 | 加上“生产部署设计中”；当前演示是 HTTP，未启动 Nginx |
+| HTTPS 进入 Nginx，完成 TLS 终止和反向代理 | 可选演示 / 生产目标 | 普通演示不启用；需要展示时启动 `edge` profile |
 | 请求进入 FastAPI 集群 | 仅生产目标 | 当前是单容器；生产镜像支持 Gunicorn 多 worker，但没有部署多节点负载均衡 |
 | 会话不固定在某台服务器 | 基础能力已实现 | 会话在 Redis，可不使用粘性会话；高可用仍依赖负载均衡和 Redis HA |
 | MySQL 主写从读 | 尚未实现 | 当前单 MySQL、单连接地址；不要声称已有读写分离 |
 | Redis 负责会话和缓存 | 准确但不完整 | 还承担 RBAC 缓存、CAS ticket 去重和审计 Stream |
-| MinIO/S3 保存证据 | 当前不准确 | 当前加密后写本地目录；MinIO 已启动但尚未接入证据服务 |
+| MinIO/S3 保存证据 | 准确 | Docker 演示默认 `STORAGE_BACKEND=s3`，证据加密后写入 MinIO；测试可切本地 |
 | KMS 统一管理密钥 | 仅抽象与本地实现完成 | 当前 LocalKMS；Vault/AWS KMS 仍是占位 |
 | CAS 对接校园统一认证 | 接口实现、真实接入未完成 | Real CAS Provider 已实现，演示使用 Mock CAS |
-| Prometheus、Grafana和日志系统已部署 | 部分实现 | 只有 `/metrics` 和结构化日志；Grafana/集中日志平台未部署 |
+| Prometheus、Grafana和日志系统已部署 | 部分实现 | `/metrics` 已实现；Prometheus/Grafana 可用 profile 启动；集中日志需生产接入 |
 | 虚线组件不阻塞主链路 | 不能概括审计 | 指标采集可旁路；高敏同步审计属于主事务的一部分 |
 
 如果答辩老师追问“如何把生产架构真正落地”，按以下顺序回答：
 
-1. 增加 Nginx 配置、域名和 TLS 证书，只对外暴露 443。
+1. 正式部署 Nginx 配置、域名和可信 TLS 证书，只对外暴露 443。
 2. 部署至少两个 FastAPI 实例并配置健康检查；把定时任务拆为独立 worker 或增加分布式锁。
 3. 配置 MySQL 复制和只读连接池，在仓储层区分主库事务与可最终一致的查询。
-4. 将证据存储适配为 S3 API，并验证 MinIO 桶权限、生命周期和备份策略。
+4. 验证 MinIO/S3 桶权限、生命周期、备份策略和跨环境迁移。
 5. 实现 Vault/AWS KMS Provider，启用密钥轮换并禁止生产使用 LocalKMS。
-6. 部署 Redis Sentinel/Cluster、Prometheus、Grafana和集中日志平台，设置告警规则。
+6. 部署 Redis Sentinel/Cluster 和集中日志平台，完善 Prometheus/Grafana 告警规则。
 
 ## 2. 登录与角色入口
 
@@ -207,8 +209,8 @@ docker compose exec -T backend python -m app.infra.db.seed
 
 提交前务必确认：
 
-- 标题至少 1 个字符，最多 200 字。
-- 经过描述至少 1 个字符，最多 5000 字。
+- 标题至少填写 1 个字符，最多 200 字。
+- 经过描述至少填写 1 个字符，最多 5000 字。
 - 诈骗类型和事发日期必须选择。
 - 涉案金额可以不填；填写时必须大于等于 0，最多保留两位小数。
 - 证据不是必填项，不上传证据也可以提交。
@@ -725,26 +727,26 @@ docker compose logs --tail=100 backend frontend
 
 ![上报字段未达到最小长度](assets/demo-runbook/28-report-submit-disabled-invalid-fields.png)
 
-这张图里的问题不是服务器故障，而是表单校验没有通过：
+旧版页面里，这类问题通常不是服务器故障，而是表单校验没有通过：
 
-- 当前演示版本已把必填文本的最低门槛统一放宽到 1 个字符；只要标题和经过描述不为空即可提交。
-- 如果仍然提交失败，优先检查是否选择了诈骗类型、事发日期是否有效、证据图片格式和大小是否符合限制、登录会话是否过期。
+- 旧版标题和经过描述有较长字数限制。
+- 当前演示版已降低字数门槛，标题和经过描述填写 `1` 也可以通过字数校验。
 - 诈骗类型、事发日期和金额 `0.02` 都是有效的。
 - 诈骗手法和联系方式是可选项，填写 `1` 不会阻止提交。
 - 证据图片是可选项，是否上传不会影响提交按钮。
 
 修复方法：
 
-1. 标题和经过描述保持非空即可，例如标题 `1`、经过描述 `1` 均可用于演示。
-2. 如果页面提示后端校验错误，按提示补齐缺失字段后再次提交。
+1. 确认标题不是空白。
+2. 确认经过描述不是空白。
 3. 确认诈骗类型已选择。
 4. 确认事发日期已选择。
 5. 再点击“提交上报”。
 
-当前页面已增加实时提示：
+当前页面会提示：
 
-- 标题或描述为空时会提示“标题不能为空”或“经过描述不能为空”。
-- 管理端录入案例库、驳回、转报警等弹窗同样只要求必填文本非空；如果后端返回 422，页面会直接弹出错误提示，避免“点击确认提交后没反应”。
+- 标题为空时显示“请输入标题”。
+- 描述为空时显示“请输入事件经过”。
 - 按钮上方汇总还未完成的字段。
 - 点击提交时会把焦点移到第一个不合格字段，不再静默无响应。
 
@@ -898,6 +900,24 @@ docker compose up -d --build backend
 1. 刷新详情页。
 2. 返回审核队列检查当前状态。
 3. 换一条待审核案件重新演示。
+
+#### 录入案例库弹窗点击“确认提交”看似无反应
+
+典型现象：在“录入知识库案例”弹窗中，三个必填项都填了 `1`，点击“确认提交”后没有办结成功。
+
+旧版原因：请求已经发到后端，但后端会按较长字数校验，返回 422 参数校验失败；页面又没有把原因显示清楚，所以看起来像“没反应”。
+
+当前演示版已放开字数下限：
+
+- 脱敏案例摘要、识别要点、防范建议、驳回原因和转报说明，填 `1` 也可以提交。
+- 内部备注仍然可选。
+- 若仍然出现 422，说明后端还停留在旧版本，执行 `git pull` 后重新构建后端。
+
+为了让答辩更自然，正式演示仍建议填稍完整的示例：
+
+- 脱敏案例摘要：`学生收到冒充电商客服的退款电话，对方诱导其开启屏幕共享并索要验证码。`
+- 识别要点：`核实来电身份；拒绝屏幕共享；验证码不得告知他人。`
+- 防范建议：`遇到退款理赔先通过官方渠道核验，切勿转账或泄露验证码。`
 
 ### 12.9 院系审核员无法发布紧急预警
 

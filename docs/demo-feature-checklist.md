@@ -23,6 +23,8 @@
 - [ ] 执行 `make migrate && make seed` 完成迁移和种子数据初始化。
 - [ ] 确认前端 `http://localhost:5173` 可访问。
 - [ ] 确认后端 `http://localhost:8000/healthz` 返回 `{"status":"ok"}`。
+- [ ] 如需展示统一入口，执行 `docker compose --profile edge up -d edge`，访问 `https://localhost:8443/healthz`。
+- [ ] 如需展示监控面板，执行 `docker compose --profile observability up -d prometheus grafana`，访问 Prometheus `http://localhost:9090` 和 Grafana `http://localhost:3000`。
 - [ ] 确认开发快捷登录页能看到四种角色。
 - [ ] 准备一张小于 5 MB 的图片，用于证据上传演示。
 - [ ] 确认学生端可看到 `2026-CS-900001` 等预置演示案件。
@@ -32,13 +34,13 @@
 
 ### 2.1 架构讲解边界
 
-- [ ] 明确当前演示使用 HTTP、Vite 和单个 FastAPI 容器，没有启动 Nginx/TLS。
+- [ ] 明确普通演示使用 HTTP、Vite 和单个 FastAPI 容器；如需展示统一入口，可用 `edge` profile 启动 Nginx/TLS。
 - [ ] 明确当前 MySQL 和 Redis 都是单实例，没有实现主从读写分离或 Sentinel。
-- [ ] 明确证据当前加密后写入本地目录；MinIO 已启动，但证据存储适配尚未接入。
+- [ ] 明确 Docker 演示环境证据会先加密再写入 MinIO/S3；测试环境可切换为本地目录。
 - [ ] 明确当前使用 LocalKMS 和 Mock CAS；Vault/AWS KMS、学校真实 CAS 属于生产接入项。
-- [ ] 明确已提供 Prometheus `/metrics` 和结构化日志，但未部署 Grafana/ELK/Loki。
+- [ ] 明确已提供 Prometheus `/metrics` 和结构化日志；Prometheus/Grafana 可用 `observability` profile 启动，ELK/Loki 属于生产接入项。
 - [ ] 不把高敏同步审计描述为旁路；它失败时会阻止高敏业务操作完成。
-- [ ] 介绍 Nginx、应用集群、MySQL 主从、Redis HA 和集中监控时使用“生产目标架构”措辞。
+- [ ] 介绍应用多节点、MySQL 主从、Redis HA、外部 KMS 和集中日志时使用“生产目标架构”措辞。
 
 ## 3. 推荐演示主线
 
@@ -333,7 +335,7 @@
 - [ ] 验证“导出审计日志”动作本身也写入审计。
 - [ ] 执行 `make verify-audit` 校验审计哈希链完整性。
 
-#### 7.3.1 其他下载功能
+### 9.3 其他下载功能
 
 - [ ] 测验完成率报告可导出 XLSX，下载后能正常打开工作表。
 - [ ] XLSX 响应类型为 `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`。
