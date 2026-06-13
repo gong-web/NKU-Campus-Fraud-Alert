@@ -62,8 +62,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         "fakeredis>=2.23,<3.0" \
         "freezegun>=1.5,<2.0" \
         "respx>=0.21,<1.0" \
-        "aiosqlite>=0.20,<1.0"\
-        "apscheduler>=3.10,<4.0"
+        "aiosqlite>=0.20,<1.0" \
+        "apscheduler>=3.10,<4.0" \
+        "openpyxl>=3.1,<4.0"
 
 # ── dev：带热重载，目标 docker-compose 的 backend.target=dev ────
 FROM builder AS dev

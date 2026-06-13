@@ -11,6 +11,11 @@
 | TD-01 | `JudicialService` 当前用业务 DB 连接读 `anonymous_mappings`；理想路径是用独立 `decrypt_user` 连接（已在 02_grants.sql 配好账号）。 | 接 KMS 阶段同步处理 | 高（合规）|
 | TD-02 | `RBACCache` 启动期失败时仅记录 warning；首次鉴权会 fallback DB 但缓存仍空。 | 加后台 retry      | 中   |
 | TD-03 | OpenAPI 文档生产不暴露策略目前是 `OPENAPI_ENABLED=false`，缺少"启用但加管理员鉴权"模式。 | 视部署需要        | 低   |
+| TD-04 | MinIO/S3 证据存储已接入；生产仍需补桶权限、生命周期、备份与迁移策略。 | 生产部署前完成对象存储运维策略 | 中 |
+| TD-05 | 定时任务随 FastAPI 进程启动；多 worker 或多节点部署会有重复执行风险。 | 拆独立 worker 或加 Redis 分布式锁 | 高（生产） |
+| TD-06 | Vault/AWS KMS Provider 仍为占位实现，演示环境使用 LocalKMS。 | 生产部署前完成独立 KMS 接入与轮换验证 | 高（安全） |
+| TD-07 | 当前只有单 MySQL、单 Redis，未实现主从读写分离和 Redis 高可用。 | 按容量与可用性要求部署复制/Sentinel | 中 |
+| TD-08 | 已有 Prometheus 指标端点，并提供 Prometheus/Grafana profile；集中日志平台仍需生产接入。 | 补日志采集和告警规则 | 中 |
 
 ## 外部依赖风险
 
