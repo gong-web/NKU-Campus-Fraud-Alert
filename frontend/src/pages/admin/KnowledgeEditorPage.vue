@@ -140,24 +140,24 @@ function validate(): boolean {
   errors.identification_points = "";
   errors.prevention_advice = "";
   let ok = true;
-  if (!form.title.trim() || form.title.trim().length < 2) {
-    errors.title = "标题至少 2 字";
+  if (!form.title.trim()) {
+    errors.title = "请输入标题";
     ok = false;
   }
   if (form.fraud_type_id == null) {
     errors.fraud_type_id = "请选择诈骗类型";
     ok = false;
   }
-  if (form.desensitized_summary.trim().length < 20) {
-    errors.desensitized_summary = "脱敏摘要至少 20 字";
+  if (!form.desensitized_summary.trim()) {
+    errors.desensitized_summary = "请输入脱敏摘要";
     ok = false;
   }
-  if (form.identification_points.trim().length < 10) {
-    errors.identification_points = "识别要点至少 10 字";
+  if (!form.identification_points.trim()) {
+    errors.identification_points = "请输入识别要点";
     ok = false;
   }
-  if (form.prevention_advice.trim().length < 10) {
-    errors.prevention_advice = "防范建议至少 10 字";
+  if (!form.prevention_advice.trim()) {
+    errors.prevention_advice = "请输入防范建议";
     ok = false;
   }
   return ok;
@@ -338,7 +338,7 @@ onMounted(async () => {
               placeholder="请用 1-2 段话描述案情，所有可识别学生身份的信息都需脱敏"
               required
               :error="errors.desensitized_summary"
-              hint="20-1000 字；该内容将作为列表卡片摘要"
+              hint="1-1000 字；该内容将作为列表卡片摘要"
               :maxlength="1000"
             />
 
@@ -350,7 +350,7 @@ onMounted(async () => {
               placeholder="列出识别此类骗局的关键信号，建议条目化"
               required
               :error="errors.identification_points"
-              hint="10-2000 字；学生最先看到这部分"
+              hint="1-2000 字；学生最先看到这部分"
               :maxlength="2000"
             />
 
@@ -362,7 +362,7 @@ onMounted(async () => {
               placeholder="列出防范该骗局的具体步骤与注意事项"
               required
               :error="errors.prevention_advice"
-              hint="10-2000 字"
+              hint="1-2000 字"
               :maxlength="2000"
             />
 

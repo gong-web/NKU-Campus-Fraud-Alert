@@ -123,7 +123,7 @@ async function revealNow(): Promise<void> {
         <template #header>
           <div>
             <h3>申请协助解密</h3>
-            <small>所有字段都将留痕；reason ≥ 8 个汉字。</small>
+            <small>所有字段都将留痕；申请理由需如实填写。</small>
           </div>
           <span class="judicial-page__step">STEP · 01</span>
         </template>
@@ -152,8 +152,8 @@ async function revealNow(): Promise<void> {
             type="textarea"
             :rows="4"
             :required="true"
-            placeholder="请用 ≥ 8 字简明描述办案场景，例如：受理 2026-CS-000123 案件，需核对匿名上报人身份以补全笔录。"
-            :hint="`已输入 ${form.reason.length} 字（≥ 8 字方可提交）`"
+            placeholder="请简明描述办案场景，例如：受理 2026-CS-000123 案件，需核对匿名上报人身份。"
+            :hint="`已输入 ${form.reason.length} 字`"
           />
           <AppInput
             v-model="form.related_case_no"

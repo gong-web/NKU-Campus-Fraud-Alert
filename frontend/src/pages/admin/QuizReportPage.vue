@@ -94,8 +94,8 @@ function openCancel(): void {
 
 async function confirmCancel(): Promise<void> {
   const reason = cancelReason.value.trim();
-  if (reason.length < 2) {
-    ElMessage.warning("撤回原因至少 2 个字");
+  if (reason.length < 1) {
+    ElMessage.warning("撤回原因不能为空");
     return;
   }
   cancelling.value = true;

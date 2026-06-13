@@ -350,7 +350,7 @@ function formatDate(dateStr: string): string {
 
 function nextStep(): void {
   if (step.value === 0) {
-    if (form.title.length < 2) { 
+    if (form.title.trim().length < 1) {
       ElMessage.warning("标题不能为空"); 
       return; 
     }

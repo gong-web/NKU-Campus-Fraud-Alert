@@ -142,6 +142,12 @@ async function submitAction(): Promise<void> {
   } catch (error) {
     if (error instanceof ApiError && error.httpStatus === 409) {
       ElMessage.warning("该事件已被其他管理员处理，请刷新页面");
+    } else if (error instanceof ApiError && error.httpStatus === 422) {
+      ElMessage.error(error.message || "请检查必填内容是否已填写");
+    } else if (error instanceof ApiError) {
+      ElMessage.error(error.message || "提交失败，请稍后重试");
+    } else {
+      ElMessage.error("提交失败，请稍后重试");
     }
   } finally {
     actionLoading.value = false;
@@ -150,14 +156,14 @@ async function submitAction(): Promise<void> {
 
 async function handleDecryptAnonymous(): Promise<void> {
   const { value } = await ElMessageBox.prompt(
-    "请填写不少于 20 字的解密原因，该操作会通知所有系统管理员。",
+    "请填写解密原因，该操作会通知所有系统管理员。",
     "匿名身份解密",
     {
       confirmButtonText: "确认解密",
       cancelButtonText: "取消",
       inputType: "textarea",
-      inputValidator: (text) => text.trim().length >= 20,
-      inputErrorMessage: "请输入至少 20 字的详细原因",
+      inputValidator: (text) => text.trim().length >= 1,
+      inputErrorMessage: "请输入解密原因",
     },
   );
   const result = await reportsApi.decryptAnonymous(caseId.value, {
@@ -291,32 +297,72 @@ onBeforeUnmount(closeViewer);
     <ElDialog v-model="actionDialogVisible" :title="dialogMode === 'resolve' ? '录入知识库案例' : dialogMode === 'reject' ? '驳回上报' : '标记转报警'" width="680px">
       <ElForm v-if="dialogMode === 'resolve'" label-position="top">
         <ElFormItem label="脱敏案例摘要" required>
-          <ElInput v-model="resolveForm.desensitized_summary" type="textarea" :rows="4" />
+          <ElInput
+            v-model="resolveForm.desensitized_summary"
+            type="textarea"
+            :rows="4"
+            placeholder="填写脱敏后的案例摘要"
+          />
         </ElFormItem>
         <ElFormItem label="识别要点" required>
-          <ElInput v-model="resolveForm.identification_points" type="textarea" :rows="3" />
+          <ElInput
+            v-model="resolveForm.identification_points"
+            type="textarea"
+            :rows="3"
+            placeholder="填写学生可识别的风险要点"
+          />
         </ElFormItem>
         <ElFormItem label="防范建议" required>
-          <ElInput v-model="resolveForm.prevention_advice" type="textarea" :rows="3" />
+          <ElInput
+            v-model="resolveForm.prevention_advice"
+            type="textarea"
+            :rows="3"
+            placeholder="填写可执行的防范建议"
+          />
         </ElFormItem>
         <ElFormItem label="内部备注">
-          <ElInput v-model="resolveForm.internal_remark" type="textarea" :rows="2" />
+          <ElInput
+            v-model="resolveForm.internal_remark"
+            type="textarea"
+            :rows="2"
+            placeholder="填写内部备注（可选）"
+          />
         </ElFormItem>
       </ElForm>
       <ElForm v-else-if="dialogMode === 'reject'" label-position="top">
         <ElFormItem label="驳回原因" required>
-          <ElInput v-model="rejectForm.reason" type="textarea" :rows="4" />
+          <ElInput
+            v-model="rejectForm.reason"
+            type="textarea"
+            :rows="4"
+            placeholder="填写驳回原因"
+          />
         </ElFormItem>
         <ElFormItem label="内部备注">
-          <ElInput v-model="rejectForm.internal_remark" type="textarea" :rows="2" />
+          <ElInput
+            v-model="rejectForm.internal_remark"
+            type="textarea"
+            :rows="2"
+            placeholder="填写内部备注（可选）"
+          />
         </ElFormItem>
       </ElForm>
       <ElForm v-else-if="dialogMode === 'transfer'" label-position="top">
         <ElFormItem label="转报说明" required>
-          <ElInput v-model="transferForm.transfer_note" type="textarea" :rows="4" />
+          <ElInput
+            v-model="transferForm.transfer_note"
+            type="textarea"
+            :rows="4"
+            placeholder="填写转报警说明"
+          />
         </ElFormItem>
         <ElFormItem label="内部备注">
-          <ElInput v-model="transferForm.internal_remark" type="textarea" :rows="2" />
+          <ElInput
+            v-model="transferForm.internal_remark"
+            type="textarea"
+            :rows="2"
+            placeholder="填写内部备注（可选）"
+          />
         </ElFormItem>
       </ElForm>
       <template #footer>

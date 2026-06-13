@@ -183,6 +183,29 @@ async def test_admin_detail_auto_open_detail(client: AsyncClient, seed_admin_mod
 
 
 @pytest.mark.asyncio
+async def test_admin_resolve_accepts_short_demo_text(client: AsyncClient, seed_admin_module) -> None:
+    case = seed_admin_module["case"]
+    login = await client.post("/api/v1/auth/cas/mock-login", json={"cas_account": "reviewer_admin"})
+    assert login.status_code == 200, login.text
+
+    detail = await client.get(f"/api/v1/admin/reports/{case.case_id}")
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["status"] == "REVIEWING"
+
+    resp = await client.post(
+        f"/api/v1/admin/reports/{case.case_id}/resolve",
+        json={
+            "desensitized_summary": "1",
+            "identification_points": "1",
+            "prevention_advice": "1",
+            "internal_remark": "1",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["status"] == "HANDLED"
+
+
+@pytest.mark.asyncio
 async def test_admin_evidence_requires_confirmation_header(client: AsyncClient, seed_admin_module) -> None:
     case = seed_admin_module["case"]
     evidence_id = seed_admin_module["evidence_id"]

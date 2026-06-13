@@ -141,7 +141,7 @@ async function reject(): Promise<void> {
   if (!entry.value || entry.value.status !== "PENDING") return;
   try {
     const { value } = await ElMessageBox.prompt(
-      "驳回原因（≥5 字，将退回作者修改）",
+      "驳回原因（将退回作者修改）",
       `驳回回草稿 · ${entry.value.title}`,
       {
         confirmButtonText: "确认驳回",
@@ -149,7 +149,7 @@ async function reject(): Promise<void> {
         confirmButtonClass: "el-button--danger",
         inputType: "textarea",
         inputValidator: (v: string) =>
-          (v?.trim().length ?? 0) >= 5 || "驳回原因至少 5 字",
+          (v?.trim().length ?? 0) >= 1 || "请填写驳回原因",
       },
     );
     await knowledgeApi.review(entry.value.entry_id, {
@@ -169,7 +169,7 @@ async function offlineEntry(): Promise<void> {
   if (!entry.value || entry.value.status !== "PUBLISHED") return;
   try {
     const { value } = await ElMessageBox.prompt(
-      "下线原因（≥5 字）",
+      "下线原因",
       `下线 · ${entry.value.title}`,
       {
         confirmButtonText: "确认下线",
@@ -177,7 +177,7 @@ async function offlineEntry(): Promise<void> {
         confirmButtonClass: "el-button--danger",
         inputType: "textarea",
         inputValidator: (v: string) =>
-          (v?.trim().length ?? 0) >= 5 || "下线原因至少 5 字",
+          (v?.trim().length ?? 0) >= 1 || "请填写下线原因",
       },
     );
     await knowledgeApi.offline(entry.value.entry_id, {

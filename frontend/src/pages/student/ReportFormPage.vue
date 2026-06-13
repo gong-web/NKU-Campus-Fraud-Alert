@@ -49,14 +49,12 @@ const savedEvidence = ref<SavedEvidenceItem[]>([]);
 const descLength = computed(() => form.value.description.length);
 const titleLength = computed(() => form.value.title.trim().length);
 const descTone = computed(() => {
-  if (descLength.value >= 200) return "success";
-  if (descLength.value >= 50) return "warning";
+  if (form.value.description.trim().length >= 1) return "success";
   return "normal";
 });
 
 const titleError = computed(() => {
   if (titleLength.value === 0) return submitAttempted.value ? "请输入标题" : "";
-  if (titleLength.value < 2) return `标题至少 2 个字，还需 ${2 - titleLength.value} 个字`;
   return "";
 });
 
@@ -71,17 +69,16 @@ const incidentDateError = computed(() =>
 const descriptionError = computed(() => {
   const length = form.value.description.trim().length;
   if (length === 0) return submitAttempted.value ? "请输入事件经过" : "";
-  if (length < 10) return `经过描述至少 10 个字，还需 ${10 - length} 个字`;
   return "";
 });
 
 const validationIssues = computed<string[]>(() => {
   const issues: string[] = [];
-  if (titleLength.value < 2) issues.push(titleError.value || "标题至少 2 个字");
+  if (titleLength.value < 1) issues.push(titleError.value || "请输入标题");
   if (form.value.fraud_type_id <= 0) issues.push("请选择诈骗类型");
   if (!form.value.incident_date) issues.push("请选择事发日期");
-  if (form.value.description.trim().length < 10) {
-    issues.push(descriptionError.value || "经过描述至少 10 个字");
+  if (form.value.description.trim().length < 1) {
+    issues.push(descriptionError.value || "请输入事件经过");
   }
   return issues;
 });
@@ -215,7 +212,7 @@ async function removeSavedFile(fileId: string): Promise<void> {
 // ── Submit ────────────────────────────────────────────────────────
 async function focusFirstInvalidField(): Promise<void> {
   await nextTick();
-  if (titleLength.value < 2) {
+  if (titleLength.value < 1) {
     titleInput.value?.focus();
     return;
   }
@@ -368,7 +365,7 @@ async function saveDraft() {
               type="text"
               class="report-form__input"
               :class="{ 'report-form__input--error': Boolean(titleError) }"
-              placeholder="一句话描述事件（2-200 字）"
+              placeholder="一句话描述事件（1-200 字）"
               maxlength="200"
               :aria-invalid="Boolean(titleError)"
             >
@@ -475,7 +472,7 @@ async function saveDraft() {
               v-model="form.description"
               class="report-form__textarea"
               :class="{ 'report-form__input--error': Boolean(descriptionError) }"
-              placeholder="请详细描述事件经过，包括时间、地点、对方说了什么、您做了什么等（建议 200 字以上）"
+              placeholder="请描述事件经过，包括时间、地点、对方说了什么、您做了什么等"
               rows="8"
               maxlength="5000"
               :aria-invalid="Boolean(descriptionError)"

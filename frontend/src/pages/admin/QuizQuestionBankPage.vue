@@ -448,7 +448,7 @@ function openEdit(q: QuestionAdmin): void {
 }
 
 async function save(): Promise<void> {
-  if (form.content.length < 5) { ElMessage.warning("题干至少 5 个字"); return; }
+  if (form.content.trim().length < 1) { ElMessage.warning("题干不能为空"); return; }
   saving.value = true;
   try {
     const body: QuestionCreateBody = {
@@ -456,7 +456,7 @@ async function save(): Promise<void> {
       option_c: form.option_c, option_d: form.option_d, correct_answer: form.correct_answer,
       explanation: form.explanation || null, difficulty: form.difficulty,
       fraud_type_id: form.fraud_type_id ?? null,
-      knowledge_entry_id: form.knowledge_entry_id || null,
+      knowledge_entry_id: form.knowledge_entry_id ? Number(form.knowledge_entry_id) : null,
     };
     if (editing.value) {
       await quizApi.updateQuestion(editing.value.question_id, { ...body, is_active: form.is_active ?? true });

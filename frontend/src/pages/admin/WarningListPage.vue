@@ -118,14 +118,14 @@ async function appendNotice(row: WarningListItem): Promise<void> {
   }
   try {
     const { value } = await ElMessageBox.prompt(
-      "追加内容（≥5 字）",
+      "追加内容",
       `追加说明 · ${row.title}`,
       {
         confirmButtonText: "提交追加",
         cancelButtonText: "取消",
         inputType: "textarea",
         inputValidator: (v: string) =>
-          (v?.trim().length ?? 0) >= 5 || "追加内容至少 5 字",
+          (v?.trim().length ?? 0) >= 1 || "请填写追加内容",
       },
     );
     await warningsApi.append(row.warning_id, { appendix: String(value).trim() });
@@ -144,7 +144,7 @@ async function offlineNotice(row: WarningListItem): Promise<void> {
   }
   try {
     const { value } = await ElMessageBox.prompt(
-      "下线原因（≥5 字）",
+      "下线原因",
       `手动下线 · ${row.title}`,
       {
         confirmButtonText: "确认下线",
@@ -152,7 +152,7 @@ async function offlineNotice(row: WarningListItem): Promise<void> {
         confirmButtonClass: "el-button--danger",
         inputType: "textarea",
         inputValidator: (v: string) =>
-          (v?.trim().length ?? 0) >= 5 || "下线原因至少 5 字",
+          (v?.trim().length ?? 0) >= 1 || "请填写下线原因",
       },
     );
     await warningsApi.offline(row.warning_id, { reason: String(value).trim() });
