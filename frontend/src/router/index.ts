@@ -35,7 +35,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/student/HomePage.vue"),
         meta: { title: "学生首页" },
       },
-      // UC-01：上报
       {
         path: "report",
         name: "report-form",
@@ -48,7 +47,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/student/ReportSuccessPage.vue"),
         meta: { title: "上报成功" },
       },
-      // UC-02：个人中心 + 我的上报
       {
         path: "profile",
         name: "student-profile",
@@ -73,7 +71,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/student/DraftsPage.vue"),
         meta: { title: "草稿箱" },
       },
-      // UC-07：安全预警
       {
         path: "warnings",
         name: "warning-list",
@@ -86,7 +83,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/student/WarningDetailPage.vue"),
         meta: { title: "预警详情" },
       },
-      // UC-08：反诈知识库
       {
         path: "kb",
         name: "kb-list",
@@ -99,8 +95,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/student/KnowledgeDetailPage.vue"),
         meta: { title: "知识详情" },
       },
-      // UC-05 / UC-09：安全测验
-      {
+            {
         path: "quiz",
         name: "quiz-entry",
         component: () => import("@/pages/student/QuizEntryPage.vue"),
@@ -154,8 +149,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/admin/ReportDetailPage.vue"),
         meta: { title: "案件审核详情" },
       },
-      // UC-07：预警公告
-      {
+            {
         path: "warnings",
         name: "admin-warning-list",
         component: () => import("@/pages/admin/WarningListPage.vue"),
@@ -173,8 +167,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/admin/WarningDetailPage.vue"),
         meta: { title: "预警详情" },
       },
-      // UC-04 / UC-08：知识库管理
-      {
+            {
         path: "kb",
         name: "admin-kb-list",
         component: () => import("@/pages/admin/KnowledgeListPage.vue"),
@@ -198,8 +191,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/admin/KnowledgeDetailPage.vue"),
         meta: { title: "知识条目详情" },
       },
-      // UC-05 / UC-09：安全测验
-      {
+            {
         path: "quiz",
         name: "admin-quiz-list",
         component: () => import("@/pages/admin/QuizListPage.vue"),
@@ -261,12 +253,12 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  // ── Mock 登录页（仅 mock 模式下用，不需要会话）───────────
+  // Mock 登录页
   {
     path: "/auth/mock-login",
     name: "mock-login",
     component: () => import("@/pages/auth/MockLoginPage.vue"),
-    meta: { title: "Mock 登录（开发用）" },
+    meta: { title: "快捷登录" },
   },
   {
     path: "/",

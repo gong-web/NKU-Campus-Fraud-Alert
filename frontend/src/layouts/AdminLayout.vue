@@ -12,15 +12,14 @@ interface NavItem {
   to: string;
   label: string;
   icon: string;
-  description: string;
 }
 
 const NAV: readonly NavItem[] = [
-  { to: "/admin/dashboard", label: "工作台", icon: "activity", description: "待处理事件总览" },
-  { to: "/admin/reports", label: "审核队列", icon: "clipboard-list", description: "筛选、查看并处理案件" },
-  { to: "/admin/warnings", label: "预警公告", icon: "bell", description: "发布与维护安全预警" },
-  { to: "/admin/kb", label: "知识库", icon: "book-open", description: "撰写与审核反诈知识" },
-  { to: "/admin/quiz", label: "安全测验", icon: "check-circle", description: "题库 · 指定测验 · 完成率报告" },
+  { to: "/admin/dashboard", label: "工作台", icon: "activity" },
+  { to: "/admin/reports", label: "审核队列", icon: "clipboard-list" },
+  { to: "/admin/warnings", label: "预警公告", icon: "bell" },
+  { to: "/admin/kb", label: "知识库", icon: "book-open" },
+  { to: "/admin/quiz", label: "安全测验", icon: "check-circle" },
 ];
 
 const initial = computed<string>(() => {
@@ -48,10 +47,6 @@ async function handleLogout(): Promise<void> {
       class="admin-layout__sidebar"
       aria-label="主导航"
     >
-      <div class="admin-layout__sidebar-grid" />
-      <div class="admin-layout__sidebar-noise" />
-      <span class="admin-layout__sidebar-motto">允公允能</span>
-
       <div class="admin-layout__brand">
         <BrandLogo
           :size="34"
@@ -84,57 +79,27 @@ async function handleLogout(): Promise<void> {
           </span>
           <span class="admin-layout__link-text">
             <strong>{{ item.label }}</strong>
-            <small>{{ item.description }}</small>
           </span>
         </RouterLink>
       </nav>
 
-      <div class="admin-layout__sidebar-foot">
-        <div class="admin-layout__sidebar-card">
-          <span class="admin-layout__sidebar-card-icon">
-            <AppIcon
-              name="info"
-              :size="14"
-            />
-          </span>
-          <div>
-            <strong>双轨审核</strong>
-            <small>院系级 · 校级 · 状态机闭环</small>
-          </div>
-        </div>
-        <div class="admin-layout__sidebar-stamp">
-          NK · 审核 2026
-        </div>
-      </div>
     </aside>
 
     <div class="admin-layout__main">
       <header class="admin-layout__header">
         <div class="admin-layout__crumb">
-          <AppIcon
-            name="list-checks"
-            :size="14"
-            class="admin-layout__crumb-icon"
-          />
-          <span>审核台</span>
-          <AppIcon
-            name="chevron-right"
-            :size="14"
-          />
           <strong>{{ $route.meta.title || "工作台" }}</strong>
         </div>
         <div class="admin-layout__user">
           <AppNotificationBell />
           <div class="admin-layout__user-meta">
             <strong>{{ auth.me?.real_name || "未登录" }}</strong>
-            <small>审核管理员</small>
           </div>
           <span
             class="admin-layout__avatar"
             aria-hidden="true"
           >
             {{ initial }}
-            <span class="admin-layout__avatar-dot" />
           </span>
           <button
             type="button"

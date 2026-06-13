@@ -23,7 +23,7 @@ const PRESETS: readonly RolePreset[] = [
     id: "sys",
     account: "sysadmin001",
     display: "系统管理员",
-    role: "SYS_ADMIN · 全部权限",
+    role: "系统管理员",
     icon: "user-cog",
     tone: "brand",
   },
@@ -31,7 +31,7 @@ const PRESETS: readonly RolePreset[] = [
     id: "review-school",
     account: "reviewer_school001",
     display: "校级审核员",
-    role: "REVIEWER · 校级",
+    role: "校级审核员",
     icon: "scale",
     tone: "info",
   },
@@ -39,7 +39,7 @@ const PRESETS: readonly RolePreset[] = [
     id: "review-dept",
     account: "reviewer_dept001",
     display: "院系审核员",
-    role: "REVIEWER · 计算机学院",
+    role: "院系审核员 · 计算机学院",
     icon: "users",
     tone: "info",
   },
@@ -47,7 +47,7 @@ const PRESETS: readonly RolePreset[] = [
     id: "student",
     account: "student001",
     display: "学生 · 张三",
-    role: "STUDENT · 计算机学院",
+    role: "学生 · 计算机学院",
     icon: "graduation-cap",
     tone: "success",
   },
@@ -84,24 +84,12 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <AuthLayout
-    eyebrow="DEV · MOCK LOGIN"
-    subtitle="无需密码，仅在 AUTH_PROVIDER=mock 时可用，便于 4 位组员开发联调。"
-  >
+  <AuthLayout subtitle="选择下方账号，或手动输入学号/工号登录。">
     <template #title>
       <h1 class="mock-login__title">
-        <span>角色快捷登录</span>
-        <small>选择一个种子账号 1 秒进入对应工作台</small>
+        <span>快捷登录</span>
       </h1>
     </template>
-
-    <div class="mock-login__hint-top">
-      <AppIcon
-        name="info"
-        :size="14"
-      />
-      <span>4 个种子账号已预置，覆盖系统管理员、校级审核员、院系审核员、学生。</span>
-    </div>
 
     <ul class="mock-login__roles">
       <li
@@ -147,7 +135,7 @@ async function submit(): Promise<void> {
     >
       <AppInput
         v-model="casAccount"
-        label="CAS 账号"
+        label="学号/工号"
         placeholder="如 student001 / sysadmin001"
         :required="true"
         :error="error"
@@ -168,18 +156,11 @@ async function submit(): Promise<void> {
       </AppButton>
     </form>
 
-    <div class="mock-login__hint">
-      <span class="mock-login__hint-icon">
-        <AppIcon
-          name="shield-alert"
-          :size="14"
-        />
-      </span>
-      <span>
-        <strong>仅开发环境</strong> · 生产配置 <code>AUTH_PROVIDER=real</code> 时此入口被后端直接禁用。
-        请勿提交真实账号到日志。
-      </span>
-    </div>
+    <p class="mock-login__back">
+      <RouterLink :to="{ name: 'login' }">
+        返回统一认证登录
+      </RouterLink>
+    </p>
   </AuthLayout>
 </template>
 
@@ -202,23 +183,6 @@ async function submit(): Promise<void> {
   font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
   letter-spacing: 0;
-}
-
-.mock-login__hint-top {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  margin-bottom: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--color-brand-50);
-  border: 1px solid rgb(134 38 51 / 14%);
-  border-left: 3px solid var(--color-brand-500);
-  color: var(--color-brand-700);
-  font-size: var(--font-size-xs);
-  line-height: 1.5;
-  font-weight: var(--font-weight-medium);
-  letter-spacing: 0.01em;
 }
 
 .mock-login__roles {
@@ -430,47 +394,19 @@ async function submit(): Promise<void> {
   gap: var(--space-3);
 }
 
-.mock-login__hint {
-  margin-top: var(--space-4);
-  padding: 10px var(--space-3);
-  border-radius: var(--radius-md);
-  background: rgb(239 108 0 / 6%);
-  border: 1px solid rgb(239 108 0 / 22%);
-  border-left: 3px solid var(--color-warning);
-  display: grid;
-  grid-template-columns: 24px 1fr;
-  gap: var(--space-2);
-  align-items: center;
+.mock-login__back {
+  margin: var(--space-4) 0 0;
+  text-align: center;
+  font-size: var(--font-size-sm);
 }
 
-.mock-login__hint-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
-  background: rgb(239 108 0 / 14%);
-  color: var(--color-warning);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.mock-login__back a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
 }
 
-.mock-login__hint span:last-child {
-  font-size: var(--font-size-xs);
-  color: var(--color-text);
-  line-height: 1.65;
-}
-
-.mock-login__hint strong {
-  color: var(--color-warning);
-  font-weight: var(--font-weight-bold);
-}
-
-.mock-login__hint code {
-  font-family: var(--font-family-mono);
-  font-size: 11px;
-  padding: 1px 5px;
-  background: var(--color-neutral-100);
-  border-radius: 3px;
-  color: var(--color-text);
+.mock-login__back a:hover {
+  color: var(--color-brand-700);
+  text-decoration: underline;
 }
 </style>

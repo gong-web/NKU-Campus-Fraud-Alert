@@ -8,6 +8,7 @@ from sqlalchemy import select
 
 from app.infra.cache.rbac_cache import RBACCache
 from app.infra.db.models import (
+    AnonymousDecryptLog,
     CaseAnonymousReporter,
     CaseStatusHistory,
     EvidenceFile,
@@ -47,6 +48,12 @@ async def seed_admin_module(db_session, tmp_path, monkeypatch):
         Permission(permission_code=perm.REPORT_READ_ALL, permission_name="审核列表", resource_type="REPORT", action_type="READ"),
         Permission(permission_code=perm.REPORT_REVIEW, permission_name="审核", resource_type="REPORT", action_type="REVIEW"),
         Permission(permission_code=perm.REPORT_VIEW_EVIDENCE, permission_name="查看证据", resource_type="REPORT", action_type="READ"),
+        Permission(
+            permission_code=perm.JUDICIAL_REQUEST_DECRYPT,
+            permission_name="司法协助查询",
+            resource_type="JUDICIAL",
+            action_type="DECRYPT",
+        ),
     ]
     db_session.add_all(perms)
     await db_session.flush()
@@ -55,6 +62,7 @@ async def seed_admin_module(db_session, tmp_path, monkeypatch):
             RolePermission(role_id=reviewer_role.role_id, permission_id=perms[0].permission_id),
             RolePermission(role_id=reviewer_role.role_id, permission_id=perms[1].permission_id),
             RolePermission(role_id=reviewer_role.role_id, permission_id=perms[2].permission_id),
+            RolePermission(role_id=sys_role.role_id, permission_id=perms[3].permission_id),
         ]
     )
 
@@ -183,6 +191,29 @@ async def test_admin_detail_auto_open_detail(client: AsyncClient, seed_admin_mod
 
 
 @pytest.mark.asyncio
+async def test_admin_resolve_accepts_short_demo_text(client: AsyncClient, seed_admin_module) -> None:
+    case = seed_admin_module["case"]
+    login = await client.post("/api/v1/auth/cas/mock-login", json={"cas_account": "reviewer_admin"})
+    assert login.status_code == 200, login.text
+
+    detail = await client.get(f"/api/v1/admin/reports/{case.case_id}")
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["status"] == "REVIEWING"
+
+    resp = await client.post(
+        f"/api/v1/admin/reports/{case.case_id}/resolve",
+        json={
+            "desensitized_summary": "1",
+            "identification_points": "1",
+            "prevention_advice": "1",
+            "internal_remark": "1",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["status"] == "HANDLED"
+
+
+@pytest.mark.asyncio
 async def test_admin_evidence_requires_confirmation_header(client: AsyncClient, seed_admin_module) -> None:
     case = seed_admin_module["case"]
     evidence_id = seed_admin_module["evidence_id"]
@@ -228,3 +259,50 @@ async def test_sysadmin_can_decrypt_anonymous_reporter(client: AsyncClient, seed
     body = resp.json()
     assert body["user_id"] == "6103"
     assert body["real_name"] == "学生乙"
+
+
+@pytest.mark.asyncio
+async def test_judicial_request_accepts_one_character_reason(
+    client: AsyncClient, seed_admin_module, db_session
+) -> None:
+    anon_case = seed_admin_module["anon_case"]
+    login = await client.post("/api/v1/auth/cas/mock-login", json={"cas_account": "sys_admin_case"})
+    assert login.status_code == 200, login.text
+
+    resp = await client.post(
+        "/api/v1/judicial-assist/request-decryption",
+        json={
+            "report_id": anon_case.case_id,
+            "judicial_doc_no": "1",
+            "reason": "1",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+
+    row = (
+        await db_session.execute(
+            select(AnonymousDecryptLog).where(
+                AnonymousDecryptLog.decrypt_log_id == int(resp.json()["decrypt_log_id"])
+            )
+        )
+    ).scalar_one()
+    assert row.reason == "1"
+
+
+@pytest.mark.asyncio
+async def test_judicial_request_rejects_blank_reason(
+    client: AsyncClient, seed_admin_module
+) -> None:
+    anon_case = seed_admin_module["anon_case"]
+    login = await client.post("/api/v1/auth/cas/mock-login", json={"cas_account": "sys_admin_case"})
+    assert login.status_code == 200, login.text
+
+    resp = await client.post(
+        "/api/v1/judicial-assist/request-decryption",
+        json={
+            "report_id": anon_case.case_id,
+            "judicial_doc_no": "1",
+            "reason": "   ",
+        },
+    )
+    assert resp.status_code == 422, resp.text

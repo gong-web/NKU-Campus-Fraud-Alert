@@ -23,16 +23,12 @@ const roleLabel = computed(() => {
 
 <template>
   <div class="profile-page">
-    <AppPageHeader
-      badge="个人中心"
-      title="我的信息"
-      subtitle="查看个人基本信息，管理上报记录与草稿。"
-    />
+    <AppPageHeader title="我的信息" />
 
     <div class="profile-page__layout">
       <!-- 左侧栏：名片 + 隐私说明 -->
       <aside class="profile-page__sidebar">
-        <AppCard tone="brand" padding="lg" class="profile-page__card">
+        <AppCard padding="lg" class="profile-page__card">
           <div class="profile-page__avatar">{{ initial }}</div>
           <h2 class="profile-page__name">{{ auth.me?.real_name ?? '未知' }}</h2>
           <p class="profile-page__meta">
@@ -41,20 +37,6 @@ const roleLabel = computed(() => {
           </p>
         </AppCard>
 
-        <AppCard padding="md" class="profile-page__tips-card">
-          <template #header>
-            <div class="profile-page__tip-header">
-              <AppIcon name="shield-check" :size="16" />
-              隐私保护说明
-            </div>
-          </template>
-          <ul class="profile-page__tips">
-            <li>您的个人信息（姓名、学号、联系方式）全程加密存储</li>
-            <li>匿名上报时，真实身份仅在司法授权的情况下才能解密</li>
-            <li>所有管理员操作均记录审计日志，可追溯</li>
-            <li>平台不会主动向第三方共享您的信息</li>
-          </ul>
-        </AppCard>
       </aside>
 
       <!-- 右侧：快捷入口网格 -->
@@ -92,27 +74,6 @@ const roleLabel = computed(() => {
           <AppIcon name="arrow-right" :size="16" class="profile-page__quick-arrow" />
         </AppCard>
 
-        <AppCard padding="md" class="profile-page__quick-item" @click="router.push({ name: 'quiz-history' })">
-          <div class="profile-page__quick-icon-wrap">
-            <AppIcon name="check-circle" :size="24" />
-          </div>
-          <div class="profile-page__quick-body">
-            <h3>测验历史记录</h3>
-            <p>查看历次安全测验成绩与通过情况</p>
-          </div>
-          <AppIcon name="arrow-right" :size="16" class="profile-page__quick-arrow" />
-        </AppCard>
-
-        <AppCard padding="md" class="profile-page__quick-item" @click="router.push({ name: 'quiz-wrong', query: { return_to: 'student-profile' } })">
-          <div class="profile-page__quick-icon-wrap">
-            <AppIcon name="book-open" :size="24" />
-          </div>
-          <div class="profile-page__quick-body">
-            <h3>我的错题本</h3>
-            <p>复盘错题并跳转知识库深入学习</p>
-          </div>
-          <AppIcon name="arrow-right" :size="16" class="profile-page__quick-arrow" />
-        </AppCard>
       </div>
     </div>
   </div>

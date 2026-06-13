@@ -13,6 +13,7 @@ import {
   AppStatCard,
 } from "@/components";
 import { formatRelative } from "@/utils/format";
+import { auditOpLabel } from "@/utils/auditLabels";
 import type { AuditLogOut, UserOut } from "@/types/api";
 
 const router = useRouter();
@@ -72,33 +73,29 @@ interface QuickAction {
   desc: string;
   icon: string;
   tone: "brand" | "info" | "danger";
-  shortcut?: string;
 }
 
 const QUICK_ACTIONS: readonly QuickAction[] = [
   {
     to: "/sys/users",
     title: "新建账号",
-    desc: "为新成员开通访问、分配角色",
+    desc: "开通访问并分配角色",
     icon: "user-cog",
     tone: "brand",
-    shortcut: "G U",
   },
   {
     to: "/sys/audit",
     title: "审计日志",
-    desc: "按操作 / 时间检索操作留痕",
+    desc: "按操作和时间查询记录",
     icon: "list-checks",
     tone: "info",
-    shortcut: "G A",
   },
   {
     to: "/sys/judicial-assist",
     title: "司法协助查询",
-    desc: "文书号 + 原因 → 解密窗口",
+    desc: "提交协查申请并查看解密结果",
     icon: "scale",
     tone: "danger",
-    shortcut: "G J",
   },
 ];
 
@@ -111,21 +108,21 @@ interface SecurityCheck {
 
 const SECURITY_CHECKS: readonly SecurityCheck[] = [
   {
-    title: "审计日志不可改",
+    title: "审计日志",
     status: "ok",
-    detail: "MySQL trigger 拦截 UPDATE / DELETE，已验证",
+    detail: "重要操作有据可查",
     icon: "shield-check",
   },
   {
-    title: "匿名映射隔离",
+    title: "匿名上报",
     status: "ok",
-    detail: "app_user 对 anonymous_mappings 零权限",
+    detail: "身份信息隔离保护",
     icon: "lock",
   },
   {
-    title: "票据重放防护",
+    title: "登录安全",
     status: "ok",
-    detail: "Redis SETNX + 5 分钟 TTL，已通过混沌测试",
+    detail: "登录会话安全保护",
     icon: "shield-alert",
   },
 ];
@@ -139,16 +136,10 @@ function shortId(v: unknown): string {
 function actionTitle(item: AuditLogOut): string {
   const op = item.operation_type;
   const id = shortId(item.object_id);
-  if (op === "LOGIN") return `登录成功 · ${id}`;
-  if (op === "LOGIN_FAILED") return `登录失败 · ${id}`;
-  if (op === "LOGOUT") return `登出 · ${id}`;
-  if (op === "USER_CREATE") return `创建账号 · ${id}`;
-  if (op === "USER_DISABLE") return `停用账号 · ${id}`;
-  if (op === "USER_ROLE_CHANGE") return `角色变更 · ${id}`;
-  if (op === "USER_BATCH_IMPORT") return `批量导入账号 · ${item.object_id} 条`;
-  if (op === "DECRYPT_ANONYMOUS_REQUEST") return `司法协助申请 · 报告 ${id}`;
-  if (op === "DECRYPT_ANONYMOUS") return `匿名身份解密 · 报告 ${id}`;
-  return `${op} · ${id}`;
+  const label = auditOpLabel(op);
+  if (op === "USER_BATCH_IMPORT") return `${label} · ${item.object_id} 条`;
+  if (op.startsWith("DECRYPT")) return `${label} · 事件 ${id}`;
+  return `${label} · ${id}`;
 }
 
 function actionIcon(item: AuditLogOut): string {
@@ -202,9 +193,7 @@ function go(path: string): void {
 <template>
   <div class="sys-dash">
     <AppPageHeader
-      badge="平台总览"
       :title="`${greeting}，${auth.me?.real_name ?? '管理员'}`"
-      :subtitle="`${today} · 平台核心指标与近期操作动态实时拉取自后端。`"
     >
       <template #actions>
         <AppButton
@@ -232,7 +221,6 @@ function go(path: string): void {
       {{ errorMsg }}
     </p>
 
-    <!-- 英雄卡片：地基工程上线播报 -->
     <section class="sys-dash__hero">
       <AppCard
         tone="brand"
@@ -241,17 +229,11 @@ function go(path: string): void {
       >
         <div class="sys-dash__hero-grid">
           <div class="sys-dash__hero-left">
-            <span class="sys-dash__hero-eyebrow">
-              <span class="dot" />
-              地基工程 · 已上线
-            </span>
             <h2 class="sys-dash__hero-title">
-              地基工程已上线，<br>
-              业务模块可<span class="sys-dash__hero-em">并行接入</span>
+              平台管理
             </h2>
             <p class="sys-dash__hero-lead">
-              CAS 单点 · RBAC 权限 · 审计 SDK · 匿名隔离 · 司法协助 · 一键 Docker 部署，
-              全部子模块通过 16 项合规自检与 P95 ≤ 200 ms 性能门槛。
+              管理账号、查看操作记录，处理司法协助申请。
             </p>
             <div class="sys-dash__hero-actions">
               <AppButton
@@ -305,10 +287,6 @@ function go(path: string): void {
             </li>
           </ul>
         </div>
-        <span
-          class="sys-dash__hero-watermark"
-          aria-hidden="true"
-        >NK · 2026</span>
       </AppCard>
     </section>
 
@@ -344,7 +322,7 @@ function go(path: string): void {
         icon="shield-check"
         tone="success"
         :loading="loading"
-        hint="DB · Redis · MinIO 健康"
+        hint="各服务运行正常"
       />
     </section>
 
@@ -407,7 +385,6 @@ function go(path: string): void {
         <template #header>
           <div>
             <h3>快捷入口</h3>
-            <small>键盘快捷键即将开放（G + 字母）</small>
           </div>
         </template>
         <ul class="sys-dash__actions">
@@ -433,10 +410,6 @@ function go(path: string): void {
                 <strong>{{ a.title }}</strong>
                 <small>{{ a.desc }}</small>
               </span>
-              <kbd
-                v-if="a.shortcut"
-                class="sys-dash__action-kbd"
-              >{{ a.shortcut }}</kbd>
               <AppIcon
                 name="arrow-right"
                 :size="16"
@@ -456,10 +429,10 @@ function go(path: string): void {
             <span class="sys-dash__health-pill">全部正常</span>
           </div>
           <ul class="sys-dash__health-list">
-            <li><span class="dot dot--ok" />MySQL · trigger 已启用</li>
-            <li><span class="dot dot--ok" />Redis · 限流键空间正常</li>
-            <li><span class="dot dot--ok" />MinIO · 证据桶可写</li>
-            <li><span class="dot dot--ok" />Audit SDK · append-only</li>
+            <li><span class="dot dot--ok" />数据库</li>
+            <li><span class="dot dot--ok" />缓存服务</li>
+            <li><span class="dot dot--ok" />文件存储</li>
+            <li><span class="dot dot--ok" />审计服务</li>
           </ul>
         </div>
       </AppCard>

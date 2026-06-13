@@ -41,6 +41,8 @@ async def seed_full(db_session) -> None:
         perm.USER_UPDATE,
         perm.USER_DISABLE,
         perm.USER_BATCH_IMPORT,
+        perm.AUDIT_READ,
+        perm.AUDIT_EXPORT,
     ]
     perms = []
     for code in needed:
@@ -165,3 +167,27 @@ class TestUserCRUD:
         # 改成不存在的 role_id 应返回 422 / 400 / 422
         r = await client.patch(f"/api/v1/users/{target}", json={"role_id": 999_999})
         assert r.status_code in (400, 404, 422)
+
+    async def test_audit_csv_export(self, client: AsyncClient, seed_full) -> None:
+        await client.post("/api/v1/auth/cas/mock-login", json={"cas_account": "sysadmin001"})
+
+        exported = await client.get(
+            "/api/v1/audit-logs/export",
+            params={"op_type": "LOGIN", "object_type": "user"},
+        )
+        assert exported.status_code == 200, exported.text
+        assert exported.content.startswith(b"\xef\xbb\xbf")
+        assert exported.headers["content-type"].startswith("text/csv")
+        assert 'filename="audit_logs.csv"' in exported.headers["content-disposition"]
+        assert exported.headers["cache-control"] == "no-store"
+
+        text = exported.content.decode("utf-8-sig")
+        assert "operation_type" in text
+        assert "LOGIN" in text
+
+        logs = await client.get(
+            "/api/v1/audit-logs",
+            params={"op_type": "AUDIT_EXPORT", "page": 1, "size": 10},
+        )
+        assert logs.status_code == 200, logs.text
+        assert logs.json()["total"] == 1

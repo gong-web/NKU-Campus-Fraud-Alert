@@ -66,7 +66,7 @@ async function submitCreate(): Promise<void> {
 }
 
 const columns = [
-  { key: "cas_account" as const, title: "CAS 账号", width: "200px", mono: true },
+  { key: "cas_account" as const, title: "学号/工号", width: "200px", mono: true },
   { key: "real_name" as const, title: "姓名", width: "150px" },
   { key: "department_id" as const, title: "院系" },
   { key: "role_id" as const, title: "角色", width: "150px" },
@@ -124,9 +124,7 @@ const stats = computed(() => {
 <template>
   <div class="users-page">
     <AppPageHeader
-      badge="账号管理"
       title="账号管理"
-      subtitle="账号创建 · 停用 · 角色变更 · 操作行为全部写入审计日志，不可绕过。"
     >
       <template #actions>
         <AppButton
@@ -159,7 +157,7 @@ const stats = computed(() => {
       <div class="users-page__filter-grid">
         <AppInput
           v-model="filters.keyword"
-          placeholder="按姓名或 CAS 账号搜索"
+          placeholder="按姓名或学号/工号搜索"
           type="search"
           autocomplete="off"
         />
@@ -216,7 +214,7 @@ const stats = computed(() => {
       :zebra="false"
       row-key="user_id"
       empty-title="暂无账号"
-      empty-hint="点击右上角「新建账号」创建第一个账号"
+      empty-hint="点击右上角新建账号，创建第一个账号"
     >
       <template #cell-cas_account="{ row }">
         <div class="users-page__cas">
@@ -296,13 +294,6 @@ const stats = computed(() => {
             />
           </button>
         </span>
-        <span class="users-page__footer-hint">
-          <AppIcon
-            name="shield-check"
-            :size="12"
-          />
-          所有变更已写入审计
-        </span>
       </template>
     </AppTable>
 
@@ -312,13 +303,12 @@ const stats = computed(() => {
       width="520px"
     >
       <p class="users-page__form-hint">
-        新建账号后将通过站内信通知本人，初始状态为「正常」。请仔细核对信息，
-        <strong>此操作会写入审计日志</strong>。
+        新建账号后将通知本人，初始状态为正常。请仔细核对信息后再提交。
       </p>
       <div class="form-grid">
         <AppInput
           v-model="newUser.cas_account"
-          label="CAS 账号"
+          label="学号/工号"
           :required="true"
           placeholder="如 student123"
         />
@@ -330,15 +320,15 @@ const stats = computed(() => {
         />
         <AppInput
           v-model="newUser.department_id"
-          label="院系 ID"
+          label="院系"
           type="text"
-          hint="1=未指定 · 2=计院 · 3=数院 · 4=商院"
+          hint="2 计算机学院、3 数学学院、4 商学院"
         />
         <AppInput
           v-model="newUser.role_id"
-          label="角色 ID"
+          label="角色"
           type="text"
-          hint="1=学生 · 2=院系审 · 3=校级审 · 4=系统管理员"
+          hint="1 学生、2 院系审核员、3 校级审核员、4 系统管理员"
         />
       </div>
       <template #footer>

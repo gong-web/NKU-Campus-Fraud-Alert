@@ -67,14 +67,14 @@ async function appendNotice(): Promise<void> {
   if (!warning.value || !isOnline.value) return;
   try {
     const { value } = await ElMessageBox.prompt(
-      "追加内容（≥5 字）",
+      "追加内容",
       `追加说明 · ${warning.value.title}`,
       {
         confirmButtonText: "提交追加",
         cancelButtonText: "取消",
         inputType: "textarea",
         inputValidator: (v: string) =>
-          (v?.trim().length ?? 0) >= 5 || "追加内容至少 5 字",
+          (v?.trim().length ?? 0) >= 1 || "请输入追加内容",
       },
     );
     await warningsApi.append(warning.value.warning_id, {
@@ -92,7 +92,7 @@ async function offlineNotice(): Promise<void> {
   if (!warning.value || !isOnline.value) return;
   try {
     const { value } = await ElMessageBox.prompt(
-      "下线原因（≥5 字）",
+      "下线原因",
       `手动下线 · ${warning.value.title}`,
       {
         confirmButtonText: "确认下线",
@@ -100,7 +100,7 @@ async function offlineNotice(): Promise<void> {
         confirmButtonClass: "el-button--danger",
         inputType: "textarea",
         inputValidator: (v: string) =>
-          (v?.trim().length ?? 0) >= 5 || "下线原因至少 5 字",
+          (v?.trim().length ?? 0) >= 1 || "请输入下线原因",
       },
     );
     await warningsApi.offline(warning.value.warning_id, {
@@ -123,7 +123,7 @@ onMounted(load);
 
 <template>
   <div class="admin-warning-detail">
-    <AppPageHeader badge="UC-07" title="预警详情" subtitle="管理员视角，含浏览量统计">
+    <AppPageHeader title="预警详情">
       <template #actions>
         <AppButton variant="ghost" size="sm" @click="goBack">
           <AppIcon name="arrow-left" :size="14" />

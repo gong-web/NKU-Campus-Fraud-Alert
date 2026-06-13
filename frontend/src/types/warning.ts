@@ -59,7 +59,7 @@ export interface WarningCreateBody {
   expires_at?: string | null;
 }
 
-/** 追加说明入参（≥ 5 字）。 */
+/** 追加说明入参。 */
 export interface WarningAppendBody {
   appendix: string;
 }

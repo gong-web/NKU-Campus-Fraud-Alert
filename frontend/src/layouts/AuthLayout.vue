@@ -6,18 +6,18 @@ defineProps<{ subtitle?: string; eyebrow?: string }>();
 const features: { icon: string; title: string; desc: string }[] = [
   {
     icon: "shield-check",
-    title: "学校 CAS 单点登录",
-    desc: "复用统一身份认证，零额外密码、零信任飞地。",
+    title: "统一身份登录",
+    desc: "使用学校账号登录，无需单独注册。",
   },
   {
     icon: "lock",
-    title: "证据加密 · 匿名隔离",
-    desc: "AES-256-GCM 落库；匿名上报由独立账号管理。",
+    title: "隐私保护",
+    desc: "上报信息加密存储，支持匿名上报。",
   },
   {
     icon: "scale",
-    title: "审计日志不可改",
-    desc: "数据库 trigger 强制 append-only，操作全留痕。",
+    title: "操作可追溯",
+    desc: "重要操作会留下记录，便于事后核查。",
   },
 ];
 </script>
@@ -59,8 +59,8 @@ const features: { icon: string; title: string; desc: string }[] = [
             是我们一起做的事。
           </h2>
           <p class="auth-layout__art-lead">
-            学生、辅导员、保卫处、系统管理员 ── 在同一个平台协作，
-            <strong>事件报得快、流转得清、预警到得到。</strong>
+            学生、辅导员、保卫处在同一平台协作，
+            <strong>及时上报、快速审核、精准预警。</strong>
           </p>
         </div>
 
@@ -81,21 +81,13 @@ const features: { icon: string; title: string; desc: string }[] = [
               <strong>{{ f.title }}</strong>
               <p>{{ f.desc }}</p>
             </div>
-            <span class="auth-layout__feature-no">0{{ i + 1 }}</span>
           </li>
         </ul>
 
         <HeroIllustration class="auth-layout__hero" />
 
         <div class="auth-layout__art-foot">
-          <span><AppIcon
-            name="shield-check"
-            :size="12"
-          />等保三级</span>
-          <span class="dot" />
-          <span>《反电信网络诈骗法》</span>
-          <span class="dot" />
-          <span>2026 软件工程课程项目</span>
+          <span>南开大学 · 校园反诈平台</span>
         </div>
       </div>
     </section>

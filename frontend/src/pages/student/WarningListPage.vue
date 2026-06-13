@@ -137,7 +137,6 @@ onMounted(load);
 <template>
   <div class="warning-list">
     <AppPageHeader
-      badge="UC-07"
       title="安全预警"
       :subtitle="`本人可见预警，共 ${total} 条`"
     />

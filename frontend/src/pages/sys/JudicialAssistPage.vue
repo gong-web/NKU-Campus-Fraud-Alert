@@ -55,7 +55,7 @@ async function submit(): Promise<void> {
   try {
     const reportId = form.report_id.trim();
     if (!/^\d+$/.test(reportId)) {
-      error.value = "report_id 必须是正整数数字串";
+      error.value = "事件编号必须是数字";
       submitting.value = false;
       return;
     }
@@ -87,9 +87,7 @@ async function revealNow(): Promise<void> {
 <template>
   <div class="judicial-page">
     <AppPageHeader
-      badge="高敏 · 司法协助"
       title="司法协助查询"
-      subtitle="全平台最高敏操作 · 全程审计记录 · 自动通知全体系统管理员。每次申请独立编号，5 分钟解密窗口。"
     />
 
     <!-- 危险提醒条 -->
@@ -104,13 +102,13 @@ async function revealNow(): Promise<void> {
         />
       </span>
       <div class="judicial-page__banner-body">
-        <strong>本操作将记录到审计并通知全体系统管理员</strong>
+        <strong>提交后会通知所有系统管理员，并留下操作记录</strong>
         <p>
           解密窗口仅 5 分钟，超时需重新申请。
           请确保已取得保卫处或学生处的<strong>书面同意</strong>，并按照协查文书号规范填写。
         </p>
       </div>
-      <span class="judicial-page__banner-stamp">高敏</span>
+      <span class="judicial-page__banner-stamp">敏感</span>
     </div>
 
     <div class="judicial-page__grid">
@@ -123,9 +121,8 @@ async function revealNow(): Promise<void> {
         <template #header>
           <div>
             <h3>申请协助解密</h3>
-            <small>所有字段都将留痕；reason ≥ 8 个汉字。</small>
+            <small>请如实填写申请理由。</small>
           </div>
-          <span class="judicial-page__step">STEP · 01</span>
         </template>
 
         <form
@@ -134,17 +131,17 @@ async function revealNow(): Promise<void> {
         >
           <AppInput
             v-model="form.report_id"
-            label="目标事件 report_id"
+            label="事件编号"
             :required="true"
             placeholder="如 1234567890"
-            hint="请通过站内事件检索得到的 report_id 填入。"
+            hint="在审核队列或上报详情中查看。"
           />
           <AppInput
             v-model="form.judicial_doc_no"
             label="协查文书编号"
             :required="true"
             placeholder="如 公协字 [2026] 第 001 号"
-            hint="文书原件应同步存档于 OA · 协查档案库。"
+            hint="请与纸质协查文书保持一致。"
           />
           <AppInput
             v-model="form.reason"
@@ -152,12 +149,12 @@ async function revealNow(): Promise<void> {
             type="textarea"
             :rows="4"
             :required="true"
-            placeholder="请用 ≥ 8 字简明描述办案场景，例如：受理 2026-CS-000123 案件，需核对匿名上报人身份以补全笔录。"
-            :hint="`已输入 ${form.reason.length} 字（≥ 8 字方可提交）`"
+            placeholder="请简明描述办案场景，例如：受理 2026-CS-000123 案件，需核对匿名上报人身份以补全笔录。"
+            :hint="`已输入 ${form.reason.length} 字`"
           />
           <AppInput
             v-model="form.related_case_no"
-            label="关联事件 case_no（可选）"
+            label="关联案件编号（可选）"
             placeholder="如 2026-CS-000123"
           />
 
@@ -179,7 +176,7 @@ async function revealNow(): Promise<void> {
                 name="lock"
                 :size="12"
               />
-              提交后将进入二次确认与全员告警。
+              提交前需再次确认，并通知全体管理员。
             </span>
             <AppButton
               type="submit"
@@ -205,7 +202,6 @@ async function revealNow(): Promise<void> {
         <template #header>
           <div>
             <h3>解密流程</h3>
-            <small>四步闭环 · 全程审计</small>
           </div>
         </template>
         <ol class="judicial-page__flow-list">
@@ -213,21 +209,21 @@ async function revealNow(): Promise<void> {
             <span class="judicial-page__flow-no">01</span>
             <div>
               <strong>填写申请</strong>
-              <small>report_id · 协查文书号 · 理由</small>
+              <small>事件编号、协查文书号、申请理由</small>
             </div>
           </li>
           <li>
             <span class="judicial-page__flow-no">02</span>
             <div>
               <strong>二次确认</strong>
-              <small>触发全员告警 · 写入审计</small>
+              <small>通知全体管理员并记录操作</small>
             </div>
           </li>
           <li>
             <span class="judicial-page__flow-no">03</span>
             <div>
               <strong>5 分钟解密窗口</strong>
-              <small>仅本人可见 · 水印防截图</small>
+              <small>仅本人可见，页面带有防泄密标识</small>
             </div>
           </li>
           <li>
@@ -249,10 +245,9 @@ async function revealNow(): Promise<void> {
     >
       <div class="judicial-page__window-grid">
         <div>
-          <span class="judicial-page__window-eyebrow">
-            <span class="dot" />
-            STEP · 03 · 解密窗口已开启
-          </span>
+          <p class="judicial-page__window-eyebrow">
+            解密窗口已开启
+          </p>
           <p class="judicial-page__window-id">
             申请编号 <code>{{ decryptLogId }}</code>
           </p>
@@ -302,14 +297,14 @@ async function revealNow(): Promise<void> {
         </template>
       </div>
       <div class="judicial-page__reveal-body">
-        <h3>身份信息（高敏）</h3>
+        <h3>上报人身份信息</h3>
         <dl class="judicial-page__reveal-dl">
           <div>
             <dt>姓名</dt>
             <dd>{{ reveal.real_name }}</dd>
           </div>
           <div>
-            <dt>CAS 账号</dt>
+            <dt>学号/工号</dt>
             <dd class="font-mono">
               {{ reveal.cas_account }}
             </dd>
@@ -320,32 +315,32 @@ async function revealNow(): Promise<void> {
             name="shield-alert"
             :size="14"
           />
-          本页面已记入审计日志；离开页面后再次查看需重新申请。
+          本次查看已留下记录；离开页面后再次查看需重新申请。
         </p>
       </div>
     </AppCard>
 
     <AppModal
       v-model="showConfirm"
-      title="二次确认 · 高敏操作"
+      title="确认提交申请"
     >
       <div class="judicial-page__confirm">
         <p>
-          即将向<strong>所有系统管理员</strong>推送告警，
-          并允许在 5 分钟内对该匿名上报进行身份解密。
+          即将向<strong>所有系统管理员</strong>发送通知，
+          并允许在 5 分钟内查看该匿名上报人的身份信息。
         </p>
         <ul>
           <li>
             <AppIcon
               name="shield-check"
               :size="14"
-            />操作将写入审计日志（不可撤回）
+            />本次操作会留下记录
           </li>
           <li>
             <AppIcon
               name="shield-alert"
               :size="14"
-            />将触发全员站内信告警
+            />会向所有系统管理员发送站内通知
           </li>
           <li>
             <AppIcon

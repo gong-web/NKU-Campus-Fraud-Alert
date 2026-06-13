@@ -28,16 +28,16 @@ KnowledgeListSortLiteral = Literal["published_at_desc", "hot"]
 class KnowledgeCreateIn(BaseModel):
     """新建知识库条目入参（UC-04 步骤 4）。"""
 
-    title: str = Field(min_length=2, max_length=128, description="条目标题")
+    title: str = Field(min_length=1, max_length=128, description="条目标题")
     fraud_type_id: int = Field(ge=1, description="所属诈骗类型 ID")
     desensitized_summary: str = Field(
-        min_length=20, max_length=1000, description="脱敏案例摘要"
+        min_length=1, max_length=1000, description="脱敏案例摘要"
     )
     identification_points: str = Field(
-        min_length=10, max_length=2000, description="识别要点（建议条目化）"
+        min_length=1, max_length=2000, description="识别要点（建议条目化）"
     )
     prevention_advice: str = Field(
-        min_length=10, max_length=2000, description="防范建议"
+        min_length=1, max_length=2000, description="防范建议"
     )
     peak_periods: str | None = Field(
         default=None,
@@ -59,19 +59,19 @@ class KnowledgeUpdateIn(BaseModel):
     """编辑知识库条目入参（PATCH，全部字段可选）。"""
 
     title: str | None = Field(
-        default=None, min_length=2, max_length=128, description="条目标题"
+        default=None, min_length=1, max_length=128, description="条目标题"
     )
     fraud_type_id: int | None = Field(
         default=None, ge=1, description="所属诈骗类型 ID"
     )
     desensitized_summary: str | None = Field(
-        default=None, min_length=20, max_length=1000, description="脱敏案例摘要"
+        default=None, min_length=1, max_length=1000, description="脱敏案例摘要"
     )
     identification_points: str | None = Field(
-        default=None, min_length=10, max_length=2000, description="识别要点"
+        default=None, min_length=1, max_length=2000, description="识别要点"
     )
     prevention_advice: str | None = Field(
-        default=None, min_length=10, max_length=2000, description="防范建议"
+        default=None, min_length=1, max_length=2000, description="防范建议"
     )
     peak_periods: str | None = Field(
         default=None, max_length=255, description="高发时间段（可选）"
@@ -94,15 +94,15 @@ class KnowledgeReviewIn(BaseModel):
     review_note: str | None = Field(
         default=None,
         max_length=500,
-        description="审核备注；REJECT 时必填且 ≥ 5 字",
+        description="审核备注；REJECT 时必填",
     )
 
     @model_validator(mode="after")
     def _check_reject_note(self) -> KnowledgeReviewIn:
         if self.action == "REJECT":
             note = (self.review_note or "").strip()
-            if len(note) < 5:
-                raise ValueError("REJECT 时必须填写 review_note 且 ≥ 5 字")
+            if len(note) < 1:
+                raise ValueError("REJECT 时必须填写 review_note")
         return self
 
 
@@ -110,7 +110,7 @@ class KnowledgeOfflineIn(BaseModel):
     """下线条目入参（UC-08 步骤 6）。"""
 
     reason: str = Field(
-        min_length=2, max_length=500, description="下线原因（用于审计）"
+        min_length=1, max_length=500, description="下线原因（用于审计）"
     )
 
 

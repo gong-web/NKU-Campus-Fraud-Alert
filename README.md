@@ -16,7 +16,7 @@
 anti-fraud-platform/
 ├── backend/        # FastAPI 后端服务（Python 3.11+）
 ├── frontend/       # Vue 3 + TypeScript SPA
-├── infra/          # Docker / K8s / Nginx / 数据库初始化与 seed
+├── infra/          # Docker Compose 环境变量与 MySQL 初始化脚本
 ├── docs/           # 设计文档、ADR、运维手册、贡献规范
 ├── scripts/        # 一键脚本（setup / reset_db / seed / verify_audit_chain）
 ├── .github/        # CI/CD workflow、Issue/PR 模板、CODEOWNERS

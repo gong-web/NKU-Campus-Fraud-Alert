@@ -13,8 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
-from pydantic import field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 STRING_ID_CONFIG = ConfigDict(coerce_numbers_to_str=True)
 STRING_ID_ATTR_CONFIG = ConfigDict(from_attributes=True, coerce_numbers_to_str=True)
@@ -30,7 +29,7 @@ DifficultyLiteral = Literal[1, 2, 3]
 class QuestionCreateIn(BaseModel):
     """新建题目入参。"""
 
-    content: str = Field(min_length=5, max_length=500, description="题干")
+    content: str = Field(min_length=1, max_length=500, description="题干")
     option_a: str = Field(min_length=1, max_length=512, description="选项 A")
     option_b: str = Field(min_length=1, max_length=512, description="选项 B")
     option_c: str = Field(min_length=1, max_length=512, description="选项 C")
@@ -60,7 +59,7 @@ class QuestionCreateIn(BaseModel):
 class QuestionUpdateIn(BaseModel):
     """编辑题目入参（PATCH，全部字段可选）。"""
 
-    content: str | None = Field(default=None, min_length=5, max_length=500)
+    content: str | None = Field(default=None, min_length=1, max_length=500)
     option_a: str | None = Field(default=None, min_length=1, max_length=512)
     option_b: str | None = Field(default=None, min_length=1, max_length=512)
     option_c: str | None = Field(default=None, min_length=1, max_length=512)
@@ -122,9 +121,11 @@ class QuestionStudentOut(BaseModel):
 class AssignedQuizCreateIn(BaseModel):
     """管理员发起指定测验（UC-09）。"""
 
-    title: str = Field(min_length=2, max_length=128, description="测验标题")
+    title: str = Field(min_length=1, max_length=128, description="测验标题")
     question_ids: list[int] = Field(
-        min_length=1, max_length=100, description="题目 ID 列表（已选定，按顺序）"
+        min_length=3,
+        max_length=100,
+        description="题目 ID 列表（至少 3 道，按选定顺序）",
     )
     pass_score: int = Field(
         default=60, ge=0, le=100, description="及格分（满分 100）"
@@ -161,16 +162,15 @@ class AssignedQuizCreateIn(BaseModel):
         if self.scope_type == "DEPT":
             if not self.dept_ids:
                 raise ValueError("scope_type=DEPT 时 dept_ids 必须非空")
-        elif self.scope_type == "USERS":
-            if not self.user_ids:
-                raise ValueError("scope_type=USERS 时 user_ids 必须非空")
+        elif self.scope_type == "USERS" and not self.user_ids:
+            raise ValueError("scope_type=USERS 时 user_ids 必须非空")
         return self
 
 
 class QuizCancelIn(BaseModel):
     """管理员撤回测验入参。"""
 
-    reason: str = Field(min_length=2, max_length=255, description="撤回原因（用于审计）")
+    reason: str = Field(min_length=1, max_length=255, description="撤回原因（用于审计）")
 
 
 class QuizListItemOut(BaseModel):

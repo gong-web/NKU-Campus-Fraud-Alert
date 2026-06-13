@@ -2,7 +2,7 @@
 interface Props {
   title: string;
   subtitle?: string;
-  /** 标题左侧的小印章字（如「概览」「审计」「司法」） */
+  /** 标题左侧的小印章字（如概览、审计、司法） */
   badge?: string;
 }
 
@@ -40,43 +40,14 @@ withDefaults(defineProps<Props>(), { subtitle: "", badge: "" });
 
 <style scoped>
 .app-page-header {
-  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: var(--space-3) 0 var(--space-5);
-  margin-bottom: var(--space-5);
+  padding: 0 0 var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
   flex-wrap: wrap;
-  animation: page-header-in 520ms var(--easing-out) both;
-}
-
-@keyframes page-header-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .app-page-header { animation: none; }
-}
-
-.app-page-header::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 2px;
-  background: linear-gradient(
-    to right,
-    var(--color-brand-500) 0,
-    var(--color-brand-500) 56px,
-    var(--color-gold-400) 56px,
-    var(--color-gold-400) 72px,
-    var(--color-border) 72px,
-    var(--color-border) 100%
-  );
-  border-radius: 1px;
 }
 
 .app-page-header__main {
@@ -84,48 +55,34 @@ withDefaults(defineProps<Props>(), { subtitle: "", badge: "" });
 }
 
 .app-page-header__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px 4px 7px;
-  margin-bottom: var(--space-3);
-  border-radius: var(--radius-pill);
-  background: linear-gradient(180deg, var(--color-brand-50) 0%, #fad6dc 100%);
-  border: 1px solid rgb(134 38 51 / 22%);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  font-weight: var(--font-weight-bold);
-  color: var(--color-brand-700);
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 80%) inset,
-    0 1px 3px -1px rgb(134 38 51 / 18%);
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.02em;
 }
 
 .app-page-header__badge-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-brand-500);
-  box-shadow: 0 0 0 2px rgb(134 38 51 / 18%);
+  display: none;
 }
 
 .app-page-header__title {
   margin: 0;
   font-family: var(--font-family-serif);
-  font-size: clamp(28px, 3vw, 36px);
+  font-size: clamp(22px, 2.5vw, 28px);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-strong);
-  letter-spacing: -0.025em;
-  line-height: 1.15;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .app-page-header__subtitle {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-  line-height: 1.7;
-  max-width: 720px;
+  line-height: 1.5;
+  max-width: 56ch;
 }
 
 .app-page-header__actions {

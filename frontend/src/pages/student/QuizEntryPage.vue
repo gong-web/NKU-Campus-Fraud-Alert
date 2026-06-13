@@ -107,39 +107,16 @@ onMounted(load);
 
 <template>
   <div class="quiz-entry">
-    <AppPageHeader
-      badge="UC-05 / UC-09"
-      title="安全测验"
-      :subtitle="`检验你的反诈识别能力。答错的题目会自动加入错题本，并关联到反诈知识库相关条目。`"
-    />
+    <AppPageHeader title="安全测验" />
 
     <!-- 顶部双卡：随机练习 + 我的错题本入口（统一卡片样式） -->
     <div class="quiz-entry__quick">
       <article class="quiz-entry__card quiz-entry__card--quick">
-        <span class="quiz-entry__card-corner" aria-hidden="true" />
         <div class="quiz-entry__card-body">
-          <div class="quiz-entry__card-tag">
-            <AppIcon name="sparkles" :size="12" />
-            随机练习
-          </div>
-          <h3 class="quiz-entry__card-title">从题库随机抽 10 题</h3>
+          <h3 class="quiz-entry__card-title">随机练习</h3>
           <p class="quiz-entry__card-summary">
-            覆盖刷单返利、冒充公检法、虚假兼职等六大类常见诈骗手法。60 分及格，答错自动入错题本。
+            从题库随机抽 10 题，60 分及格。
           </p>
-          <div class="quiz-entry__card-meta">
-            <span class="quiz-entry__card-meta-cell">
-              <AppIcon name="list-checks" :size="13" />
-              10 道题
-            </span>
-            <span class="quiz-entry__card-meta-cell">
-              <AppIcon name="circle-check" :size="13" />
-              60 分及格
-            </span>
-            <span class="quiz-entry__card-meta-cell">
-              <AppIcon name="clock" :size="13" />
-              约 5 分钟
-            </span>
-          </div>
         </div>
         <div class="quiz-entry__card-action">
           <AppButton
@@ -155,26 +132,11 @@ onMounted(load);
       </article>
 
       <article class="quiz-entry__card quiz-entry__card--quick" @click="openWrong">
-        <span class="quiz-entry__card-corner" aria-hidden="true" />
         <div class="quiz-entry__card-body">
-          <div class="quiz-entry__card-tag">
-            <AppIcon name="book-open" :size="12" />
-            我的错题本
-          </div>
-          <h3 class="quiz-entry__card-title">复盘最近的错题</h3>
+          <h3 class="quiz-entry__card-title">错题本</h3>
           <p class="quiz-entry__card-summary">
-            最近 100 条答错的题目集中复盘，并跳转到对应的反诈知识库条目深入学习。
+            复盘答错的题目，关联知识库条目。
           </p>
-          <div class="quiz-entry__card-meta">
-            <span class="quiz-entry__card-meta-cell">
-              <AppIcon name="info" :size="13" />
-              含解析
-            </span>
-            <span class="quiz-entry__card-meta-cell">
-              <AppIcon name="arrow-right" :size="13" />
-              跳转知识库
-            </span>
-          </div>
         </div>
         <div class="quiz-entry__card-action">
           <AppButton variant="secondary" size="md">
@@ -189,10 +151,8 @@ onMounted(load);
     <section class="quiz-entry__assigned">
       <div class="quiz-entry__section-head">
         <h3 class="quiz-entry__section-title">
-          <AppIcon name="clipboard-list" :size="18" />
           指定测验
         </h3>
-        <small>管理员发起的限时测验，按截止时间排序</small>
       </div>
 
       <div v-if="loading" class="quiz-entry__loading">
@@ -222,7 +182,7 @@ onMounted(load);
             <h4 class="quiz-entry__card-title">{{ it.title }}</h4>
             <AppStatusTag
               :status="quizStatusTone(it.status)"
-              :text="QUIZ_STATUS_LABEL[it.status]"
+              :text="QUIZ_STATUS_LABEL[it.status] || it.status"
             />
           </div>
           <p class="quiz-entry__card-summary">

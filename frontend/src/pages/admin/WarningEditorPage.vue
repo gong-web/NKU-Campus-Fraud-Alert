@@ -107,12 +107,12 @@ function validate(): boolean {
   errors.content = "";
   errors.target_dept_ids = "";
   let ok = true;
-  if (!form.title.trim() || form.title.trim().length < 4) {
-    errors.title = "标题至少 4 字";
+  if (!form.title.trim()) {
+    errors.title = "请输入标题";
     ok = false;
   }
-  if (!form.content.trim() || form.content.trim().length < 10) {
-    errors.content = "正文至少 10 字";
+  if (!form.content.trim()) {
+    errors.content = "请输入正文";
     ok = false;
   }
   if (form.push_scope === "DEPARTMENT" && form.target_dept_ids.length === 0) {
@@ -167,7 +167,7 @@ onMounted(loadDepartments);
 
 <template>
   <div class="admin-warning-editor">
-    <AppPageHeader badge="UC-07" title="发布预警" subtitle="发布后立即推送给学生端，请仔细核对">
+    <AppPageHeader title="发布预警">
       <template #actions>
         <AppButton variant="ghost" size="sm" @click="goBack">
           <AppIcon name="arrow-left" :size="14" />
@@ -195,7 +195,7 @@ onMounted(loadDepartments);
           placeholder="请简述事件经过、识别要点、应对建议"
           required
           :error="errors.content"
-          hint="正文至少 10 字，发布后学生即可看到"
+          hint="填写正文后学生即可看到"
         />
 
         <div class="admin-warning-editor__group">

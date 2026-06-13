@@ -78,7 +78,7 @@ onMounted(load);
 
 <template>
   <div class="kb-detail">
-    <AppPageHeader badge="UC-08" title="知识详情">
+    <AppPageHeader title="知识详情">
       <template #actions>
         <AppButton variant="ghost" size="sm" @click="goBack">
           <AppIcon name="arrow-left" :size="14" />

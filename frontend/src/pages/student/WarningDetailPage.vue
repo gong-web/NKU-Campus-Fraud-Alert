@@ -80,7 +80,7 @@ onMounted(load);
 
 <template>
   <div class="warning-detail">
-    <AppPageHeader badge="UC-07" title="预警详情" subtitle="阅读后将自动标记为已读">
+    <AppPageHeader title="预警详情">
       <template #actions>
         <AppButton variant="ghost" size="sm" @click="goBack">
           <AppIcon name="arrow-left" :size="14" />

@@ -18,7 +18,7 @@ const message = ref<string>("");
 
 const isMock = import.meta.env.VITE_AUTH_PROVIDER === "mock";
 const providerName = computed<string>(() => {
-  if (provider.value === "mock") return "Mock CAS（开发）";
+  if (provider.value === "mock") return "开发模式";
   if (provider.value === "real") return "南开大学统一身份认证";
   return provider.value || "未知";
 });
@@ -86,7 +86,7 @@ function handleMockLogin(): void {
         </p>
       </div>
       <span class="login__provider-pill">
-        {{ healthy ? 'ONLINE' : 'OFFLINE' }}
+        {{ healthy ? '正常' : '不可用' }}
       </span>
     </div>
 
@@ -116,7 +116,7 @@ function handleMockLogin(): void {
         name="log-in"
         :size="18"
       />
-      使用学校 CAS 登录
+      使用学校统一认证登录
     </AppButton>
 
     <div class="login__divider">
@@ -134,10 +134,10 @@ function handleMockLogin(): void {
         :size="16"
       />
       <template v-if="isMock">
-        Mock 登录（输入学号即可）
+        开发快捷登录
       </template>
       <template v-else>
-        Mock 登录已禁用
+        快捷登录未启用
       </template>
     </AppButton>
 
@@ -149,7 +149,7 @@ function handleMockLogin(): void {
             :size="14"
           />
         </span>
-        <span>所有登录会话经 HttpOnly Cookie 管理；CSRF / 重放双重防护。</span>
+        <span>登录状态由安全机制保护，请勿在公共设备上保持登录。</span>
       </div>
       <div class="login__note">
         <span class="login__note-icon">

@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 class ReportDraftCreateIn(BaseModel):
     fraud_type_id: int = Field(ge=1)
     title: str = Field(min_length=1, max_length=128)
-    description: str = Field(min_length=10, max_length=10_000)
+    description: str = Field(min_length=1, max_length=10_000)
 
 class ReportDraftOut(BaseModel):
     draft_id: int

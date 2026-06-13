@@ -122,7 +122,6 @@ onMounted(load);
 <template>
   <div class="admin-quiz-list">
     <AppPageHeader
-      badge="UC-05 / UC-09"
       title="安全测验"
       :subtitle="`共 ${total} 场测验（含进行中、已结束、已撤回）`"
     >
@@ -194,7 +193,7 @@ onMounted(load);
       <div v-else-if="items.length === 0" class="admin-quiz-list__empty">
         <AppEmpty
           title="暂无测验"
-          hint="点击右上角「发起测验」创建第一场指定测验"
+          hint="点击右上角发起测验，创建第一场指定测验"
           illustration="default"
         />
       </div>
@@ -230,7 +229,7 @@ onMounted(load);
               <td>
                 <AppStatusTag
                   :status="quizStatusTone(row.status)"
-                  :text="QUIZ_STATUS_LABEL[row.status]"
+                  :text="QUIZ_STATUS_LABEL[row.status] || row.status"
                 />
               </td>
               <td class="admin-quiz-list__actions-cell" @click.stop>

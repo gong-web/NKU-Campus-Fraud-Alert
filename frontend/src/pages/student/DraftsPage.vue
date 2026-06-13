@@ -51,9 +51,7 @@ onMounted(load);
 <template>
   <div class="drafts-page">
     <AppPageHeader
-      badge="草稿箱"
       title="上报草稿"
-      subtitle="草稿保存 30 天后自动清理"
     />
 
     <div

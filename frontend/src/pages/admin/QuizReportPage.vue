@@ -94,8 +94,8 @@ function openCancel(): void {
 
 async function confirmCancel(): Promise<void> {
   const reason = cancelReason.value.trim();
-  if (reason.length < 2) {
-    ElMessage.warning("撤回原因至少 2 个字");
+  if (reason.length < 1) {
+    ElMessage.warning("请输入撤回原因");
     return;
   }
   cancelling.value = true;
@@ -141,7 +141,6 @@ onMounted(load);
     <template v-else-if="visibleReport && quiz">
       <!-- 页头 -->
       <AppPageHeader
-        badge="UC-09"
         :title="quiz.title"
         :subtitle="`截止：${quiz.deadline_at?.slice(0, 16).replace('T', ' ') || '—'} · 题目数：${quiz.question_count} · 及格分：${quiz.pass_score}`"
       >
@@ -152,7 +151,7 @@ onMounted(load);
           </AppButton>
           <AppStatusTag
             :status="quizStatusTone(quiz.status)"
-            :text="QUIZ_STATUS_LABEL[quiz.status]"
+            :text="QUIZ_STATUS_LABEL[quiz.status] || quiz.status"
           />
           <AppButton variant="secondary" size="md" @click="downloadXlsx">
             <AppIcon name="download" :size="14" />
@@ -257,7 +256,7 @@ onMounted(load);
         <div class="report__cancel-body">
           <p class="report__cancel-title">撤回后学生将无法继续作答</p>
           <p class="report__cancel-desc">
-            撤回原因仅审计可见，学生侧只看到状态变化。已提交的作答记录会保留。
+            撤回原因仅管理员可见，学生侧只看到状态变化。已提交的作答记录会保留。
           </p>
         </div>
       </div>

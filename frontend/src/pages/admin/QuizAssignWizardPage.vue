@@ -1,7 +1,6 @@
 <template>
   <div class="wizard">
     <AppPageHeader
-      badge="UC-05"
       title="发起指定测验"
       subtitle="配置基本信息、参与范围与题目，完成后一键发布"
     >
@@ -99,14 +98,16 @@
             <AppIcon name="search" :size="14" />
             搜索
           </AppButton>
-          <span class="wizard__qsel-count">已选 <strong>{{ form.question_ids.length }}</strong> 题</span>
+          <span class="wizard__qsel-count">
+            至少选择 3 道题 · 已选 <strong>{{ form.question_ids.length }}</strong> 题
+          </span>
         </div>
         <ElTable :data="questions" v-loading="loadingQs" class="wizard__table">
           <ElTableColumn label="选择" width="56" align="center">
             <template #default="{ row }">
               <ElCheckbox 
                 :model-value="isSelected(row)" 
-                @change="(val: boolean) => toggleQuestion(row, val)"
+                @change="(val) => toggleQuestion(row, Boolean(val))"
               />
             </template>
           </ElTableColumn>
@@ -350,7 +351,7 @@ function formatDate(dateStr: string): string {
 
 function nextStep(): void {
   if (step.value === 0) {
-    if (form.title.length < 2) { 
+    if (form.title.trim().length < 1) {
       ElMessage.warning("标题不能为空"); 
       return; 
     }
@@ -372,8 +373,8 @@ function nextStep(): void {
       return; 
     }
   } else if (step.value === 2) {
-    if (form.question_ids.length < 10) {
-      ElMessage.warning("请至少选择 10 道题");
+    if (form.question_ids.length < 3) {
+      ElMessage.warning("请至少选择 3 道题");
       return;
     }
   }

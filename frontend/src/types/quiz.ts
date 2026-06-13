@@ -1,7 +1,4 @@
-/** UC-05 / UC-09 安全测验前端类型。
- *
- * 与后端 ``app/schemas/quiz.py`` 一一对应；ID 字段一律 string（避免大整数精度）。
- */
+/** 安全测验相关类型。ID 字段使用 string，避免大整数精度问题。 */
 
 export type OptionLetter = "A" | "B" | "C" | "D";
 export type QuizType = "RANDOM" | "ASSIGNED";

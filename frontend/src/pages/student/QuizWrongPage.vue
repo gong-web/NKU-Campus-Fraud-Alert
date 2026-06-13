@@ -84,9 +84,8 @@ onMounted(load);
 <template>
   <div class="quiz-wrong">
     <AppPageHeader
-      badge="UC-05 错题本"
       title="我的错题本"
-      :subtitle="`最近 100 条答错的题目（共 ${items.length} 条）。点击标题展开详情。`"
+      :subtitle="`共 ${items.length} 道错题`"
     >
       <template #actions>
         <AppButton variant="ghost" size="md" @click="backToList">
@@ -104,7 +103,7 @@ onMounted(load);
     <AppCard v-else-if="items.length === 0" padding="md">
       <AppEmpty
         title="还没有错题"
-        hint="继续保持！可以从安全测验入口开始一轮新的随机练习。"
+        hint="可从安全测验入口开始随机练习。"
         illustration="default"
       />
     </AppCard>

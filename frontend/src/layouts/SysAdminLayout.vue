@@ -12,15 +12,14 @@ interface NavItem {
   to: string;
   label: string;
   icon: string;
-  description: string;
   danger?: boolean;
 }
 
 const NAV: readonly NavItem[] = [
-  { to: "/sys/dashboard", label: "概览", icon: "activity", description: "平台核心指标" },
-  { to: "/sys/users", label: "账号管理", icon: "users", description: "创建 · 停用 · 角色变更" },
-  { to: "/sys/audit", label: "审计日志", icon: "list-checks", description: "操作全留痕 · 不可删改" },
-  { to: "/sys/judicial-assist", label: "司法协助查询", icon: "scale", description: "高敏 · 全员告警 · 窗口解密", danger: true },
+  { to: "/sys/dashboard", label: "概览", icon: "activity" },
+  { to: "/sys/users", label: "账号管理", icon: "users" },
+  { to: "/sys/audit", label: "审计日志", icon: "list-checks" },
+  { to: "/sys/judicial-assist", label: "司法协助查询", icon: "scale", danger: true },
 ];
 
 const initial = computed<string>(() => {
@@ -88,7 +87,6 @@ async function handleLogout(): Promise<void> {
           </span>
           <span class="sys-layout__link-text">
             <strong>{{ item.label }}</strong>
-            <small>{{ item.description }}</small>
           </span>
           <AppIcon
             name="chevron-right"
@@ -98,52 +96,23 @@ async function handleLogout(): Promise<void> {
         </RouterLink>
       </nav>
 
-      <div class="sys-layout__sidebar-foot">
-        <div class="sys-layout__sidebar-card">
-          <span class="sys-layout__sidebar-card-icon">
-            <AppIcon
-              name="shield-check"
-              :size="14"
-            />
-          </span>
-          <div>
-            <strong>等保三级</strong>
-            <small>审计 append-only · 双重防护</small>
-          </div>
-        </div>
-        <div class="sys-layout__sidebar-stamp">
-          NK · 2026
-        </div>
-      </div>
     </aside>
 
     <div class="sys-layout__main">
       <header class="sys-layout__header">
         <div class="sys-layout__crumb">
-          <AppIcon
-            name="activity"
-            :size="14"
-            class="sys-layout__crumb-icon"
-          />
-          <span>系统管理</span>
-          <AppIcon
-            name="chevron-right"
-            :size="14"
-          />
-          <strong>{{ $route.meta.title || $route.name }}</strong>
+          <strong>{{ $route.meta.title || "概览" }}</strong>
         </div>
         <div class="sys-layout__user">
           <AppNotificationBell />
           <div class="sys-layout__user-meta">
             <strong>{{ auth.me?.real_name || "未登录" }}</strong>
-            <small>系统管理员</small>
           </div>
           <span
             class="sys-layout__avatar"
             aria-hidden="true"
           >
             {{ initial }}
-            <span class="sys-layout__avatar-dot" />
           </span>
           <button
             type="button"

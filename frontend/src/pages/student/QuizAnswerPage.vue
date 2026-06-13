@@ -127,7 +127,7 @@ async function doSubmit(): Promise<void> {
   try {
     const body = {
       answers: start.value.questions.map((q) => ({
-        // 雪花 ID 可能超出 JS 安全整数；这里必须传 string，后端会再转 int。
+        // 大整数 ID 以 string 提交，避免精度丢失。
         question_id: q.question_id,
         chosen_answer: answers.value[q.question_id] ?? null,
       })),
@@ -330,7 +330,6 @@ onMounted(() => {
     <!-- ── 提交结果 ── -->
     <template v-else-if="result">
       <AppPageHeader
-        badge="测验结果"
         :title="result.is_pass ? '🎉 恭喜通过！' : '未通过，继续加油'"
         :subtitle="`共 ${result.total_count} 题，答对 ${result.correct_count} 题`"
       />
@@ -499,7 +498,7 @@ onMounted(() => {
         <div class="quiz-answer__confirm-body">
           <p class="quiz-answer__confirm-title">作答进度将不保留</p>
           <p class="quiz-answer__confirm-desc">
-            返回列表后，本次作答记录会保留为「进行中」状态，但已选答案不会保存到本地。是否仍要返回？
+            返回列表后，本次作答记录会保留为进行中状态，但已选答案不会保存到本地。是否仍要返回？
           </p>
         </div>
       </div>

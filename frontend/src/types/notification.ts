@@ -1,11 +1,7 @@
-/** 站内通知相关 TypeScript 类型定义。
- *
- * 字段与后端 NotificationOut schema 一一对应。
- * notification_id / related_object_id 均为雪花字符串（后端 coerce_numbers_to_str）。
- */
+/** 站内通知类型。 */
 
 export interface Notification {
-  /** 通知 ID（雪花字符串，对应后端 BigInteger） */
+  /** 通知 ID */
   notification_id: string
   /** 通知类型，如 REPORT_RESOLVED / QUIZ_ASSIGNED / WARNING_PUSH */
   type: string
@@ -15,7 +11,7 @@ export interface Notification {
   content: string
   /** 关联对象类型（如 fraud_case / warning_notice），可为 null */
   related_object_type: string | null
-  /** 关联对象 ID（雪花字符串），可为 null */
+  /** 关联对象 ID，可为 null */
   related_object_id: string | null
   /** 是否已读 */
   is_read: boolean

@@ -6,11 +6,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class JudicialDecryptRequestIn(BaseModel):
-    model_config = ConfigDict(coerce_numbers_to_str=True)
+    model_config = ConfigDict(coerce_numbers_to_str=True, str_strip_whitespace=True)
 
     report_id: str = Field(min_length=1, pattern=r"^\d+$", description="目标事件 report_id")
     judicial_doc_no: str = Field(min_length=1, max_length=64, description="协查文书编号（必填）")
-    reason: str = Field(min_length=8, max_length=2000, description="申请理由（≥ 8 字）")
+    reason: str = Field(min_length=1, max_length=2000, description="申请理由")
     related_case_no: str | None = Field(default=None, max_length=32)
 
 

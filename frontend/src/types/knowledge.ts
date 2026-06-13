@@ -70,7 +70,7 @@ export interface KnowledgeAdminListParams {
   size?: number;
 }
 
-/** 新建条目入参（草稿，UC-04 步骤 4）。 */
+/** 新建知识库条目入参。 */
 export interface KnowledgeCreateBody {
   title: string;
   fraud_type_id: number;
@@ -85,7 +85,7 @@ export interface KnowledgeCreateBody {
 /** 编辑条目入参（PATCH，全部可选）。 */
 export type KnowledgeUpdateBody = Partial<KnowledgeCreateBody>;
 
-/** 校级审核入参（REJECT 时 review_note 必填且 ≥ 5 字）。 */
+/** 校级审核入参（REJECT 时 review_note 必填）。 */
 export interface KnowledgeReviewBody {
   action: KnowledgeReviewAction;
   review_note?: string | null;

@@ -87,7 +87,6 @@ function formatDateTime(s: string) {
 
     <template v-else-if="detail">
       <AppPageHeader
-        badge="案件详情"
         :title="detail.title"
         :subtitle="detail.case_no"
       />

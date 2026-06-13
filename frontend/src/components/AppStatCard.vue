@@ -13,7 +13,7 @@ interface Props {
   delta?: number;
   deltaLabel?: string;
   loading?: boolean;
-  /** 当 value 为「—」「-」「待接入」等占位符时，以更弱的视觉显示 */
+  /** 当 value 为 —、-、待接入 等占位符时，以更弱的视觉显示 */
   placeholder?: string;
   /** 可选的迷你趋势点（0-100），最多 12 个，自动渲染为 sparkline */
   trend?: readonly number[];
@@ -165,39 +165,9 @@ const sparkPath = computed<string>(() => {
 .stat-card--danger::before { background: var(--color-danger); }
 .stat-card--neutral::before { background: var(--color-neutral-400); }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-mid);
-  border-color: var(--color-border-strong);
-}
-
-.stat-card::after {
-  content: "";
-  position: absolute;
-  inset: auto -20% -50% auto;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  filter: blur(56px);
-  opacity: 0.18;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.stat-card--brand::after { background: var(--color-brand-500); }
-.stat-card--info::after { background: var(--color-info); }
-.stat-card--success::after { background: var(--color-success); }
-.stat-card--warning::after { background: var(--color-warning); }
-.stat-card--danger::after { background: var(--color-danger); }
-.stat-card--neutral::after { background: var(--color-neutral-400); }
-
 .stat-card--is-placeholder::before {
   background: var(--color-neutral-300);
   opacity: 0.55;
-}
-
-.stat-card--is-placeholder::after {
-  display: none;
 }
 
 .stat-card__top {

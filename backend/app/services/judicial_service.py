@@ -58,10 +58,12 @@ class JudicialService:
         """SysAdmin 申请解密。"""
         if not operator.is_sysadmin:
             raise PermissionDenied("仅系统管理员可发起司法协助查询")
-        if not judicial_doc_no.strip() or len(judicial_doc_no) > 64:
+        judicial_doc_no = judicial_doc_no.strip()
+        reason = reason.strip()
+        if not judicial_doc_no or len(judicial_doc_no) > 64:
             raise JudicialBadRequest("协查文书编号缺失或过长")
-        if not reason.strip() or len(reason) < 8:
-            raise JudicialBadRequest("申请理由必填，≥ 8 字")
+        if not reason:
+            raise JudicialBadRequest("申请理由必填")
 
         now = datetime.now(tz=UTC)
         expires_at = now + timedelta(seconds=self._window_s)
@@ -88,8 +90,8 @@ class JudicialService:
                 report_id=report_id,
                 requester_id=operator.user_id,
                 approver_id=None,
-                judicial_doc_no=judicial_doc_no.strip(),
-                reason=reason.strip(),
+                judicial_doc_no=judicial_doc_no,
+                reason=reason,
                 related_case_no=related_case_no,
                 expires_at=expires_at,
                 audit_log_id=audit_log_id,

@@ -120,7 +120,6 @@ onMounted(async () => {
 <template>
   <div class="kb-list">
     <AppPageHeader
-      badge="UC-08"
       title="反诈知识库"
       :subtitle="`已发布反诈案例与防范建议，共 ${total} 条`"
     />

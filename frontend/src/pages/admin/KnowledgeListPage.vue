@@ -156,7 +156,7 @@ async function offlineEntry(row: KnowledgeListItem): Promise<void> {
   }
   try {
     const { value } = await ElMessageBox.prompt(
-      "下线原因（≥5 字）",
+      "下线原因",
       `下线 · ${row.title}`,
       {
         confirmButtonText: "确认下线",
@@ -164,7 +164,7 @@ async function offlineEntry(row: KnowledgeListItem): Promise<void> {
         confirmButtonClass: "el-button--danger",
         inputType: "textarea",
         inputValidator: (v: string) =>
-          (v?.trim().length ?? 0) >= 5 || "下线原因至少 5 字",
+          (v?.trim().length ?? 0) >= 1 || "请输入下线原因",
       },
     );
     await knowledgeApi.offline(row.entry_id, { reason: String(value).trim() });
@@ -198,7 +198,6 @@ onMounted(async () => {
 <template>
   <div class="admin-kb-list">
     <AppPageHeader
-      badge="UC-04"
       title="知识库管理"
       :subtitle="`共 ${total} 条（含草稿、待审核、已发布、已下线）`"
     >
@@ -280,7 +279,7 @@ onMounted(async () => {
       <div v-else-if="items.length === 0" class="admin-kb-list__empty">
         <AppEmpty
           title="暂无知识条目"
-          hint="点击右上角「新建条目」开始撰写"
+          hint="点击右上角新建条目，开始撰写"
           illustration="search"
         />
       </div>

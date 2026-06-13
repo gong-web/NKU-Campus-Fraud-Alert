@@ -82,6 +82,12 @@ docker compose exec -T backend python -m app.infra.db.seed
 5. 如需展示监控面板，执行 `docker compose --profile observability up -d prometheus grafana`。
 6. 打开前端 `http://localhost:5173`。
 
+现场策略：
+
+- 主线只新建 1 条学生上报，用于展示“学生低门槛提交”和生成案件编号。
+- 案件审核、匿名司法协助、测验统计优先使用 seed 预置数据，减少现场临时造数据的风险。
+- 四个角色尽量分开浏览器或浏览器配置文件登录，避免同一个 Cookie 被不同角色覆盖。
+
 讲解：
 
 “这个项目是前后端分离的校园反诈平台。演示环境使用 Mock CAS，不需要接真实统一身份认证。后端、前端、MySQL、Redis 和 MinIO 基础服务都通过 Docker Compose 一键拉起。当前 Docker 演示环境中，证据文件会先加密，再写入 MinIO/S3 对象存储；测试环境也可以切换为本地加密目录。”
@@ -649,6 +655,12 @@ docker compose exec -T backend python -c "import openpyxl; print(openpyxl.__vers
 docker compose logs --tail=100 backend frontend
 ```
 
+若 `docker compose up -d --build backend` 因 Docker Hub DNS 或临时网络问题无法重建，但后端容器仍在运行，可先执行下面的临时兜底命令保证现场导出功能可用；答辩后再在网络正常时重新构建镜像：
+
+```powershell
+docker compose exec -T backend uv pip install --python /opt/venv/bin/python "openpyxl>=3.1,<4.0"
+```
+
 截图：
 
 ![审计日志](assets/demo-runbook/26-sys-audit.png)
@@ -696,6 +708,17 @@ docker compose logs --tail=100 backend frontend
 收尾可以这样说：
 
 “这条演示链路从学生匿名上报开始，经过审核处理、紧急预警、知识发布、测验复盘，最后在系统管理员端可以追溯审计记录。它不是一个孤立表单，而是一套完整的防诈处置闭环。”
+
+### 10.1 稳妥演示数据分配
+
+| 环节 | 推荐数据 | 原因 |
+| --- | --- | --- |
+| 学生现场上报 | 新建 1 条匿名上报 | 展示表单、证据上传和案件编号生成 |
+| 案件审核办结 | `2026-CS-900003` | 初始为审核中，适合直接录入案例库并办结 |
+| 案件驳回 | `2026-CS-900004` | 初始为审核中，适合演示驳回反馈 |
+| 匿名保护和司法协助 | `2026-CS-900005` / 事件 `990000000000000005` | 已有匿名映射，能稳定解密 |
+| 学生查看结果 | `2026-CS-900006`、`2026-CS-900007`、`2026-CS-900008` | 覆盖已处理、已驳回、已转报警 |
+| 测验统计导出 | 预置已结束测验 | 已有目标人数和提交记录，导出更稳定 |
 
 ## 11. 演示时容易被问到的问题
 
@@ -756,7 +779,7 @@ docker compose logs --tail=100 backend frontend
 
 演示时可以这样说明：
 
-“这里故意只输入一个字。系统会立即标红不合格字段，并准确提示还差几个字；点击提交后，页面顶部还会汇总原因并定位到第一处错误。因此按钮有反应但没有产生案件时，先看红色校验提示，不要重复点击。”
+“这里故意只输入一个字也能通过字数门槛。系统现在只拦截空白必填项、未选择类型或日期、金额格式错误等真正影响提交的数据；如果按钮有反应但没有产生案件，先看红色校验提示，不要重复点击。”
 
 ### 12.2 点击提交后提示 401 或跳回登录页
 

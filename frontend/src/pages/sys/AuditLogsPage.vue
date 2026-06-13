@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
+import { ElMessage } from "element-plus";
 import type { AuditLogOut, PaginationOut } from "@/types/api";
 import { auditApi } from "@/api/audit";
+import { auditOpLabel, auditObjectTypeLabel } from "@/utils/auditLabels";
 import {
   AppButton,
   AppCard,
@@ -22,6 +24,7 @@ const page = ref<number>(1);
 const size = ref<number>(20);
 const data = ref<PaginationOut<AuditLogOut> | null>(null);
 const loading = ref<boolean>(false);
+const exporting = ref<boolean>(false);
 
 async function load(): Promise<void> {
   loading.value = true;
@@ -56,9 +59,9 @@ const columns = [
   { key: "operation_type" as const, title: "操作", width: "172px" },
   { key: "operator_id" as const, title: "操作人", width: "168px", mono: true },
   { key: "object_type" as const, title: "对象", width: "84px" },
-  { key: "object_id" as const, title: "对象 ID", width: "150px", mono: true },
+  { key: "object_id" as const, title: "对象编号", width: "150px", mono: true },
   { key: "source_ip" as const, title: "来源 IP", width: "140px", mono: true },
-  { key: "trace_id" as const, title: "Trace ID", mono: true },
+  { key: "trace_id" as const, title: "请求编号", mono: true },
 ];
 
 function fmtTime(iso: string | undefined): { date: string; time: string } {
@@ -85,11 +88,21 @@ function opTone(op: string): "info" | "success" | "warning" | "danger" | "neutra
 const totalCount = computed<number>(() => data.value?.total ?? 0);
 const totalPages = computed<number>(() => Math.max(1, Math.ceil(totalCount.value / size.value)));
 
-function exportCsv(): void {
-  const url = new URL("/api/v1/audit-logs/export", window.location.origin);
-  if (filters.op_type) url.searchParams.set("op_type", filters.op_type);
-  if (filters.operator_id != null) url.searchParams.set("operator_id", String(filters.operator_id));
-  window.location.href = url.toString();
+async function exportCsv(): Promise<void> {
+  exporting.value = true;
+  try {
+    await auditApi.exportCsv({
+      ...(filters.op_type ? { op_type: filters.op_type } : {}),
+      ...(filters.operator_id != null ? { operator_id: filters.operator_id } : {}),
+      ...(filters.object_type ? { object_type: filters.object_type } : {}),
+      ...(filters.object_id ? { object_id: filters.object_id } : {}),
+    });
+    ElMessage.success("审计日志 CSV 已导出");
+  } catch {
+    ElMessage.error("导出失败，请稍后重试");
+  } finally {
+    exporting.value = false;
+  }
 }
 
 function shortTrace(t: string | null | undefined): string {
@@ -108,9 +121,7 @@ function shortId(v: unknown): string {
 <template>
   <div class="audit-page">
     <AppPageHeader
-      badge="审计日志 · APPEND-ONLY"
       title="审计日志"
-      subtitle="操作全留痕 · 任何角色不可删改 · 数据库 trigger 与 SDK 双重防护。"
     >
       <template #actions>
         <span
@@ -126,6 +137,7 @@ function shortId(v: unknown): string {
         </span>
         <AppButton
           variant="primary"
+          :loading="exporting"
           @click="exportCsv"
         >
           <AppIcon
@@ -150,13 +162,13 @@ function shortId(v: unknown): string {
             @change="page = 1; load()"
           >
             <option value="">全部</option>
-            <option value="LOGIN">LOGIN · 登录</option>
-            <option value="LOGIN_FAILED">LOGIN_FAILED · 登录失败</option>
-            <option value="LOGOUT">LOGOUT · 登出</option>
-            <option value="USER_CREATE">USER_CREATE · 创建账号</option>
-            <option value="USER_DISABLE">USER_DISABLE · 停用账号</option>
-            <option value="USER_ENABLE">USER_ENABLE · 启用账号</option>
-            <option value="DECRYPT_ANONYMOUS">DECRYPT_ANONYMOUS · 司法解密</option>
+            <option value="LOGIN">登录</option>
+            <option value="LOGIN_FAILED">登录失败</option>
+            <option value="LOGOUT">登出</option>
+            <option value="USER_CREATE">创建账号</option>
+            <option value="USER_DISABLE">停用账号</option>
+            <option value="USER_ENABLE">启用账号</option>
+            <option value="DECRYPT_ANONYMOUS">司法解密</option>
           </select>
         </label>
         <label class="audit-page__select-wrap">
@@ -167,15 +179,15 @@ function shortId(v: unknown): string {
             @change="page = 1; load()"
           >
             <option value="">全部</option>
-            <option value="user">user · 账号</option>
-            <option value="report">report · 上报事件</option>
-            <option value="audit_log">audit_log · 审计</option>
-            <option value="judicial_request">judicial_request · 司法</option>
+            <option value="user">账号</option>
+            <option value="report">上报事件</option>
+            <option value="audit_log">审计记录</option>
+            <option value="judicial_request">司法协助</option>
           </select>
         </label>
         <AppInput
           v-model="filters.object_id"
-          label="对象 ID"
+          label="对象编号"
           placeholder="精确匹配"
         />
         <div class="audit-page__filter-actions">
@@ -221,8 +233,11 @@ function shortId(v: unknown): string {
       <template #cell-operation_type="{ row }">
         <AppStatusTag
           :status="opTone(row.operation_type)"
-          :text="row.operation_type"
+          :text="auditOpLabel(row.operation_type)"
         />
+      </template>
+      <template #cell-object_type="{ row }">
+        <span>{{ auditObjectTypeLabel(row.object_type) }}</span>
       </template>
       <template #cell-operator_id="{ row }">
         <span
@@ -287,13 +302,6 @@ function shortId(v: unknown): string {
             aria-label="末页"
             @click="page = totalPages; load()"
           >»</button>
-        </span>
-        <span class="audit-page__footer-hint">
-          <AppIcon
-            name="shield-check"
-            :size="12"
-          />
-          仅展示，不可删改
         </span>
       </template>
     </AppTable>

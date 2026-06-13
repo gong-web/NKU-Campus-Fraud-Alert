@@ -180,32 +180,24 @@ interface QuickEntryX extends QuickEntry {
 
 const QUICK_ENTRIES: readonly QuickEntryX[] = [
   {
-    title: "我要上报疑似诈骗",
-    desc: "30 秒内完成快速上报，可匿名",
-    icon: "siren",
-    tone: "brand",
-    cta: "立即上报",
-    anchor: "report-form",
-  },
-  {
     title: "我的上报记录",
-    desc: "跟踪事件状态、补充材料",
+    desc: "查看处理进度与补充材料",
     icon: "clipboard-list",
     tone: "info",
     cta: "查看记录",
     anchor: "my-reports",
   },
   {
-    title: "常见诈骗手法",
-    desc: "六大类典型套路与识别要点",
+    title: "反诈知识库",
+    desc: "典型案例与防范指引",
     icon: "book-open",
     tone: "warning",
-    cta: "查看图谱",
-    anchor: "fraud-types",
+    cta: "浏览知识库",
+    anchor: "kb-list",
   },
 ];
 
-const ROUTE_ANCHORS = new Set(["report-form", "my-reports"]);
+const ROUTE_ANCHORS = new Set(["my-reports", "kb-list"]);
 
 function scrollToAnchor(id?: string): void {
   if (!id) return;
@@ -257,9 +249,8 @@ const HOTLINES: readonly Hotline[] = [
 <template>
   <div class="student-home">
     <AppPageHeader
-      badge="校园反诈 · 学生首页"
       :title="`${greeting}，${auth.me?.real_name ?? '同学'}`"
-      subtitle="保持警惕，发现疑似诈骗及时上报，让校园更安全。一键报、有人审、有反馈。"
+      subtitle="发现疑似诈骗请及时上报，审核结果将通过站内通知反馈。"
     />
 
     <!-- 顶部安全预警横幅（按最高级预警上色） -->
@@ -279,7 +270,6 @@ const HOTLINES: readonly Hotline[] = [
       </span>
       <span class="student-home__warn-banner-body">
         <span class="student-home__warn-banner-eyebrow">
-          <span class="student-home__warn-banner-dot" />
           {{ WARNING_LEVEL_LABEL[topWarning.warning_level] }}级预警
         </span>
         <strong class="student-home__warn-banner-title">
@@ -303,17 +293,11 @@ const HOTLINES: readonly Hotline[] = [
     >
       <div class="student-home__hero-grid">
         <div class="student-home__hero-left">
-          <span class="student-home__hero-eyebrow">
-            <span class="dot" />
-            30 秒上报 · 全程匿名可选
-          </span>
           <h2 class="student-home__hero-title">
-            一键上报，<br>
-            快速联通<span class="student-home__hero-em">保卫处</span>与<span class="student-home__hero-em">辅导员</span>
+            上报疑似诈骗
           </h2>
           <p class="student-home__hero-lead">
-            匿名上报选项可启用。上报后会进入审核流程，状态变更将通过站内信第一时间通知你；
-            高风险上报自动加急。
+            支持匿名上报，个人信息加密存储。
           </p>
           <div class="student-home__hero-actions">
             <AppButton
@@ -327,140 +311,7 @@ const HOTLINES: readonly Hotline[] = [
               />
               立即上报
             </AppButton>
-            <AppButton
-              variant="ghost-on-brand"
-              size="lg"
-              @click="scrollToAnchor('fraud-types')"
-            >
-              <AppIcon
-                name="info"
-                :size="18"
-              />
-              我可以匿名吗？
-            </AppButton>
           </div>
-          <ul class="student-home__hero-bullets">
-            <li>
-              <AppIcon
-                name="shield-check"
-                :size="14"
-              />
-              个人信息全程加密，仅司法授权可解
-            </li>
-            <li>
-              <AppIcon
-                name="activity"
-                :size="14"
-              />
-              上报后 24 小时内必有人审核
-            </li>
-          </ul>
-        </div>
-        <div
-          class="student-home__hero-illustration"
-          aria-hidden="true"
-        >
-          <svg
-            viewBox="0 0 240 240"
-            width="220"
-            height="220"
-          >
-            <defs>
-              <radialGradient
-                id="home-orb"
-                cx="50%"
-                cy="50%"
-                r="50%"
-              >
-                <stop
-                  offset="0%"
-                  stop-color="#ffffff"
-                  stop-opacity="0.6"
-                />
-                <stop
-                  offset="100%"
-                  stop-color="#ffffff"
-                  stop-opacity="0"
-                />
-              </radialGradient>
-              <linearGradient
-                id="home-shield"
-                x1="0"
-                y1="0"
-                x2="0.6"
-                y2="1"
-              >
-                <stop
-                  offset="0%"
-                  stop-color="#ffffff"
-                />
-                <stop
-                  offset="100%"
-                  stop-color="#f4d4dc"
-                />
-              </linearGradient>
-            </defs>
-            <circle
-              cx="120"
-              cy="120"
-              r="110"
-              fill="url(#home-orb)"
-            />
-            <circle
-              cx="120"
-              cy="120"
-              r="92"
-              fill="none"
-              stroke="rgba(255,255,255,0.32)"
-              stroke-dasharray="2 5"
-            />
-            <circle
-              cx="120"
-              cy="120"
-              r="72"
-              fill="none"
-              stroke="rgba(230,179,73,0.35)"
-              stroke-width="0.8"
-              stroke-dasharray="0.8 2"
-            />
-            <!-- 八瓣莲花 -->
-            <g
-              transform="translate(120 120)"
-              opacity="0.5"
-            >
-              <g
-                v-for="i in 8"
-                :key="i"
-                :transform="`rotate(${(i - 1) * 45})`"
-              >
-                <path
-                  d="M0 -56 C8 -42 8 -22 0 -10 C-8 -22 -8 -42 0 -56 Z"
-                  fill="rgba(255,233,196,0.18)"
-                  stroke="rgba(230,179,73,0.32)"
-                  stroke-width="0.5"
-                />
-              </g>
-            </g>
-            <!-- 中央盾 -->
-            <path
-              d="M120 60 L156 76 V124 C156 154 138 174 120 184 C102 174 84 154 84 124 V76 Z"
-              fill="url(#home-shield)"
-            />
-            <path
-              d="M120 60 L156 76 V124 C156 154 138 174 120 184 C102 174 84 154 84 124 V76 Z"
-              fill="none"
-              stroke="rgba(134,38,51,0.36)"
-              stroke-width="0.8"
-            />
-            <path
-              d="M102 122 L116 136 L142 108"
-              fill="none"
-              stroke="#862633"
-              stroke-width="6"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
         </div>
       </div>
     </AppCard>
@@ -511,7 +362,6 @@ const HOTLINES: readonly Hotline[] = [
             <AppIcon name="book-open" :size="18" />
             反诈知识库
           </h3>
-          <small>近期已发布的典型案例与防范指引</small>
         </div>
         <AppButton variant="ghost" size="sm" @click="openKbList">
           浏览全部
@@ -526,17 +376,11 @@ const HOTLINES: readonly Hotline[] = [
           :style="{ animationDelay: `${0.06 * i}s` }"
           @click="openKbDetail(k)"
         >
-          <span class="student-home__kb-card-corner" aria-hidden="true" />
           <span class="student-home__kb-card-tag">
-            <AppIcon name="tag" :size="12" />
             {{ k.fraud_type_name || "通用" }}
           </span>
           <h4>{{ k.title }}</h4>
           <p>{{ k.desensitized_summary }}</p>
-          <span class="student-home__kb-card-foot">
-            <AppIcon name="arrow-right" :size="13" />
-            阅读
-          </span>
         </article>
       </div>
     </section>
@@ -546,15 +390,9 @@ const HOTLINES: readonly Hotline[] = [
       id="fraud-types"
       class="student-home__grid"
     >
-      <AppCard
-        padding="lg"
-        :corner="true"
-      >
+      <AppCard padding="lg">
         <template #header>
-          <div>
-            <h3>常见诈骗类型</h3>
-            <small>遇到下列特征时请第一时间核实并上报。</small>
-          </div>
+          <h3>常见诈骗类型</h3>
         </template>
         <ul class="student-home__fraud">
           <li
@@ -573,20 +411,13 @@ const HOTLINES: readonly Hotline[] = [
               <strong>{{ f.name }}</strong>
               <small>{{ f.desc }}</small>
             </div>
-            <span
-              class="student-home__fraud-tag"
-              :class="`student-home__fraud-tag--${f.tone}`"
-            >{{ f.trend }}</span>
           </li>
         </ul>
       </AppCard>
 
       <AppCard padding="lg">
         <template #header>
-          <div>
-            <h3>遇到紧急情况</h3>
-            <small>电话直拨，越早处置越能止损。</small>
-          </div>
+          <h3>紧急联系电话</h3>
         </template>
         <div class="student-home__emergency">
           <a
@@ -612,16 +443,6 @@ const HOTLINES: readonly Hotline[] = [
               class="student-home__emergency-arrow"
             />
           </a>
-        </div>
-        <div class="student-home__tip">
-          <AppIcon
-            name="sparkles"
-            :size="14"
-          />
-          <span>
-            凡是要求<strong>转账</strong>、<strong>刷信誉</strong>、<strong>远程屏幕共享</strong>的，
-            几乎都是诈骗。
-          </span>
         </div>
       </AppCard>
     </section>

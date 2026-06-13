@@ -57,28 +57,28 @@ const statCards = computed(() => {
     {
       label: "待办案件",
       value: data?.pending_count ?? "—",
-      hint: data && data.pending_count > 10 ? "待办超过 10 条，请优先处理" : "待审核案件数",
+      hint: data && data.pending_count > 10 ? "待办较多，请优先处理" : undefined,
       icon: "clipboard-list",
       tone: data && data.pending_count > 10 ? "danger" : "brand",
     },
     {
       label: "审核中",
       value: data?.reviewing_count ?? "—",
-      hint: "正在处理中的案件",
+      hint: "",
       icon: "activity",
       tone: "info",
     },
     {
       label: "今日已处理",
       value: data?.today_handled ?? "—",
-      hint: "今日完成的处理数",
+      hint: "",
       icon: "check-circle",
       tone: "brand",
     },
     {
       label: "今日驳回 / 转报",
       value: data ? `${data.today_rejected} / ${data.today_reported}` : "—",
-      hint: "驳回与转报警统计",
+      hint: "",
       icon: "shield-alert",
       tone: "warning",
     },
@@ -104,32 +104,27 @@ onMounted(load);
 <template>
   <div class="admin-dash">
     <AppPageHeader
-      badge="审核工作台"
       :title="`${greeting}，${auth.me?.real_name ?? '审核员'}`"
-      subtitle="事件上报、审核决策、敏感访问审计与聚合告警的统一工作台。"
     >
       <template #actions>
         <AppButton variant="primary" size="sm" @click="openQueue">
-          进入审核队列
+          审核队列
         </AppButton>
       </template>
     </AppPageHeader>
     <section class="admin-dash__tracks">
-      <AppStatCard v-for="item in statCards" :key="item.label" :label="item.label" :value="item.value" :hint="item.hint" :icon="item.icon" :tone="item.tone" />
+      <AppStatCard v-for="item in statCards" :key="item.label" :label="item.label" :value="item.value" :hint="item.hint ?? ''" :icon="item.icon" :tone="item.tone" />
     </section>
     <section class="admin-dash__grid">
       <AppCard padding="md" class="admin-dash__panel">
         <template #header>
-          <div>
-            <h3>近 7 日趋势</h3>
-            <small>提交量与已处理量对比</small>
-          </div>
+          <h3>近 7 日趋势</h3>
         </template>
         <div v-if="loading" class="admin-dash__loading">
           载入中...
         </div>
         <div v-else-if="trendPoints.length === 0" class="admin-dash__empty-wrap">
-          <AppEmpty title="暂无趋势数据" hint="最近 7 天还没有新的审核数据。" />
+          <AppEmpty title="暂无趋势数据" />
         </div>
         <div v-else class="admin-dash__chart-wrap">
           <svg viewBox="0 0 100 60" preserveAspectRatio="none" class="admin-dash__chart">
@@ -148,16 +143,13 @@ onMounted(load);
 
       <AppCard padding="md" class="admin-dash__panel">
         <template #header>
-          <div>
-            <h3>我最近的处理</h3>
-            <small>最近 5 条审核动作</small>
-          </div>
+          <h3>最近处理</h3>
         </template>
         <div v-if="loading" class="admin-dash__loading">
           载入中...
         </div>
         <div v-else-if="!summary?.my_recent_actions.length" class="admin-dash__empty-wrap">
-          <AppEmpty title="暂无处理记录" hint="处理过案件后会在这里展示轨迹。" />
+          <AppEmpty title="暂无处理记录" />
         </div>
         <div v-else class="admin-dash__recent-list">
           <article v-for="item in summary?.my_recent_actions" :key="`${item.case_id}-${item.created_at}`" class="admin-dash__recent-item">
@@ -218,7 +210,7 @@ onMounted(load);
 
 .admin-dash__loading,
 .admin-dash__empty-wrap {
-  min-height: 280px;
+  min-height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -79,7 +79,7 @@ async function load(): Promise<void> {
 
 async function openEvidence(fileId: string, fileName: string): Promise<void> {
   await ElMessageBox.confirm(
-    "查看证据图片将被完整记录至审计日志。请确认您正在执行合规审核工作。",
+    "查看证据图片会留下操作记录，请确认您正在进行审核工作。",
     "敏感操作确认",
     { confirmButtonText: "确认查看", cancelButtonText: "取消", type: "warning" },
   );
@@ -105,7 +105,7 @@ async function handleContactReporter(): Promise<void> {
     return;
   }
   await ElMessageBox.confirm(
-    "查看联系方式将被记录至审计日志，是否继续？",
+    "查看联系方式会留下操作记录，是否继续？",
     "敏感操作确认",
     { confirmButtonText: "继续查看", cancelButtonText: "取消", type: "warning" },
   );
@@ -142,6 +142,10 @@ async function submitAction(): Promise<void> {
   } catch (error) {
     if (error instanceof ApiError && error.httpStatus === 409) {
       ElMessage.warning("该事件已被其他管理员处理，请刷新页面");
+    } else if (error instanceof ApiError && error.httpStatus === 422) {
+      ElMessage.warning("提交内容未通过校验，请检查必填项");
+    } else if (error instanceof Error) {
+      ElMessage.error(error.message || "处理失败，请稍后重试");
     }
   } finally {
     actionLoading.value = false;
@@ -150,14 +154,14 @@ async function submitAction(): Promise<void> {
 
 async function handleDecryptAnonymous(): Promise<void> {
   const { value } = await ElMessageBox.prompt(
-    "请填写不少于 20 字的解密原因，该操作会通知所有系统管理员。",
+    "请填写解密原因，该操作会通知所有系统管理员。",
     "匿名身份解密",
     {
       confirmButtonText: "确认解密",
       cancelButtonText: "取消",
       inputType: "textarea",
-      inputValidator: (text) => text.trim().length >= 20,
-      inputErrorMessage: "请输入至少 20 字的详细原因",
+      inputValidator: (text) => text.trim().length >= 1,
+      inputErrorMessage: "请输入解密原因",
     },
   );
   const result = await reportsApi.decryptAnonymous(caseId.value, {
@@ -177,7 +181,7 @@ onBeforeUnmount(closeViewer);
 
 <template>
   <div class="admin-report-detail">
-    <AppPageHeader v-if="detail" badge="UC-06" :title="detail.case_no" subtitle="审核详情与处理动作">
+    <AppPageHeader v-if="detail" :title="detail.case_no">
       <template #actions>
         <AppStatusTag :status="statusTone(detail.status)" :text="STATUS_LABEL[detail.status] || detail.status" />
       </template>
@@ -291,13 +295,28 @@ onBeforeUnmount(closeViewer);
     <ElDialog v-model="actionDialogVisible" :title="dialogMode === 'resolve' ? '录入知识库案例' : dialogMode === 'reject' ? '驳回上报' : '标记转报警'" width="680px">
       <ElForm v-if="dialogMode === 'resolve'" label-position="top">
         <ElFormItem label="脱敏案例摘要" required>
-          <ElInput v-model="resolveForm.desensitized_summary" type="textarea" :rows="4" />
+          <ElInput
+            v-model="resolveForm.desensitized_summary"
+            type="textarea"
+            :rows="4"
+            placeholder="填写脱敏后的案例摘要"
+          />
         </ElFormItem>
         <ElFormItem label="识别要点" required>
-          <ElInput v-model="resolveForm.identification_points" type="textarea" :rows="3" />
+          <ElInput
+            v-model="resolveForm.identification_points"
+            type="textarea"
+            :rows="3"
+            placeholder="填写识别要点"
+          />
         </ElFormItem>
         <ElFormItem label="防范建议" required>
-          <ElInput v-model="resolveForm.prevention_advice" type="textarea" :rows="3" />
+          <ElInput
+            v-model="resolveForm.prevention_advice"
+            type="textarea"
+            :rows="3"
+            placeholder="填写防范建议"
+          />
         </ElFormItem>
         <ElFormItem label="内部备注">
           <ElInput v-model="resolveForm.internal_remark" type="textarea" :rows="2" />
@@ -305,7 +324,12 @@ onBeforeUnmount(closeViewer);
       </ElForm>
       <ElForm v-else-if="dialogMode === 'reject'" label-position="top">
         <ElFormItem label="驳回原因" required>
-          <ElInput v-model="rejectForm.reason" type="textarea" :rows="4" />
+          <ElInput
+            v-model="rejectForm.reason"
+            type="textarea"
+            :rows="4"
+            placeholder="填写驳回原因"
+          />
         </ElFormItem>
         <ElFormItem label="内部备注">
           <ElInput v-model="rejectForm.internal_remark" type="textarea" :rows="2" />
@@ -313,7 +337,12 @@ onBeforeUnmount(closeViewer);
       </ElForm>
       <ElForm v-else-if="dialogMode === 'transfer'" label-position="top">
         <ElFormItem label="转报说明" required>
-          <ElInput v-model="transferForm.transfer_note" type="textarea" :rows="4" />
+          <ElInput
+            v-model="transferForm.transfer_note"
+            type="textarea"
+            :rows="4"
+            placeholder="填写转报说明"
+          />
         </ElFormItem>
         <ElFormItem label="内部备注">
           <ElInput v-model="transferForm.internal_remark" type="textarea" :rows="2" />

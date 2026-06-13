@@ -67,7 +67,7 @@
 例：`POST /api/v1/users` 创建账号
 
 1. 前端 axios 自动带 `cookie + X-Requested-With`。
-2. Nginx (生产) → Uvicorn → FastAPI。
+2. 普通演示：Vite/浏览器 → Uvicorn → FastAPI；启用 `edge` profile 或生产部署时：Nginx → Uvicorn → FastAPI。
 3. **Middleware** `TraceIdMiddleware` 生成 trace_id 写到 `request.state` 与日志 contextvars。
 4. **Middleware** `CSRFRequiredHeaderMiddleware` 检查 `X-Requested-With`。
 5. Controller `users.create_user` 通过 `Depends(require_permission("user:create"))` 鉴权：

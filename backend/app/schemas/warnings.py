@@ -25,9 +25,9 @@ WarningStatusLiteral = Literal["ONLINE", "OFFLINE"]
 class WarningCreateIn(BaseModel):
     """发布预警入参（UC-03 步骤 4-6）。"""
 
-    title: str = Field(min_length=2, max_length=128, description="预警标题")
+    title: str = Field(min_length=1, max_length=128, description="预警标题")
     content: str = Field(
-        min_length=10, max_length=5000, description="预警正文（建议 ≥ 200 字）"
+        min_length=1, max_length=5000, description="预警正文"
     )
     warning_level: WarningLevelLiteral = Field(
         description="预警等级 1=提示 / 2=警告 / 3=紧急"
@@ -62,7 +62,7 @@ class WarningAppendIn(BaseModel):
     """追加后续说明入参（UC-07 步骤 8）。"""
 
     appendix: str = Field(
-        min_length=5, max_length=2000, description="追加说明正文（≥5 字）"
+        min_length=1, max_length=2000, description="追加说明正文"
     )
 
 
@@ -70,7 +70,7 @@ class WarningOfflineIn(BaseModel):
     """手动下线预警入参（UC-07 步骤 6）。"""
 
     reason: str = Field(
-        min_length=2, max_length=200, description="下线原因（用于审计）"
+        min_length=1, max_length=200, description="下线原因（用于审计）"
     )
 
 

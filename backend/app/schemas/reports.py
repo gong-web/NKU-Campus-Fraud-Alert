@@ -7,7 +7,6 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 STRING_ID_CONFIG = ConfigDict(coerce_numbers_to_str=True)
 STRING_ID_ATTR_CONFIG = ConfigDict(from_attributes=True, coerce_numbers_to_str=True)
 
@@ -25,8 +24,8 @@ class FraudTypeOut(BaseModel):
 
 # ── 上报表单 ─────────────────────────────────────────────────────────
 class ReportCreateIn(BaseModel):
-    title: str = Field(min_length=2, max_length=200, description="简短标题")
-    description: str = Field(min_length=10, max_length=5000, description="事件详细描述（建议 200 字以上）")
+    title: str = Field(min_length=1, max_length=200, description="简短标题")
+    description: str = Field(min_length=1, max_length=5000, description="事件详细描述")
     fraud_type_id: int = Field(ge=1, description="诈骗类型 ID")
     incident_date: date = Field(description="事发日期")
     amount: Decimal | None = Field(default=None, ge=0, decimal_places=2, description="涉案金额（元）")
@@ -165,19 +164,19 @@ class AdminReportListQuery(BaseModel):
 
 
 class ResolveReportIn(BaseModel):
-    desensitized_summary: str = Field(min_length=20, max_length=4000)
-    identification_points: str = Field(min_length=10, max_length=4000)
-    prevention_advice: str = Field(min_length=10, max_length=4000)
+    desensitized_summary: str = Field(min_length=1, max_length=4000)
+    identification_points: str = Field(min_length=1, max_length=4000)
+    prevention_advice: str = Field(min_length=1, max_length=4000)
     internal_remark: str | None = Field(default=None, max_length=500)
 
 
 class RejectReportIn(BaseModel):
-    reason: str = Field(min_length=20, max_length=500)
+    reason: str = Field(min_length=1, max_length=500)
     internal_remark: str | None = Field(default=None, max_length=500)
 
 
 class TransferReportIn(BaseModel):
-    transfer_note: str = Field(min_length=10, max_length=500)
+    transfer_note: str = Field(min_length=1, max_length=500)
     internal_remark: str | None = Field(default=None, max_length=500)
 
 
@@ -189,7 +188,7 @@ class ContactInfoOut(BaseModel):
 class AnonymousDecryptIn(BaseModel):
     model_config = ConfigDict(coerce_numbers_to_str=True)
 
-    reason: str = Field(min_length=20, max_length=2000)
+    reason: str = Field(min_length=1, max_length=2000)
     approver_id: str | None = Field(default=None, pattern=r"^\d+$")
 
 

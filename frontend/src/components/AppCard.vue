@@ -65,7 +65,7 @@ withDefaults(defineProps<Props>(), {
     border-color var(--duration-base) var(--easing-out);
 }
 
-/* 浅色卡片：顶部一条极细高光，让卡片有「真实纸张」的反光 */
+/* 浅色卡片：顶部一条极细高光，让卡片有真实纸张的反光 */
 .app-card--plain::before {
   content: "";
   position: absolute;

@@ -92,7 +92,6 @@ onMounted(load);
 <template>
   <div class="quiz-history">
     <AppPageHeader
-      badge="UC-05 / UC-09"
       title="测验历史记录"
       :subtitle="`共完成 ${total} 次测验，累计通过 ${passCount} 次，平均得分 ${avgScore} 分。`"
     >

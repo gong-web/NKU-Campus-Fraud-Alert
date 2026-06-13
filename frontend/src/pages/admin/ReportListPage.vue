@@ -148,7 +148,7 @@ onMounted(async () => {
 
 <template>
   <div class="admin-report-list">
-    <AppPageHeader badge="UC-06" title="审核队列" :subtitle="`当前共 ${total} 条待处理事件`" />
+    <AppPageHeader title="审核队列" :subtitle="`当前共 ${total} 条待处理事件`" />
 
     <AppCard padding="md">
       <div class="admin-report-list__filters">
@@ -196,7 +196,7 @@ onMounted(async () => {
     <AppCard padding="none">
       <div v-if="loading" class="admin-report-list__loading">加载中...</div>
       <div v-else-if="items.length === 0" class="admin-report-list__empty">
-        <AppEmpty title="暂无待审核事件" hint="喝杯茶歇会儿~" illustration="search" />
+        <AppEmpty title="暂无待审核事件" illustration="search" />
       </div>
       <div v-else class="admin-report-list__table-wrap">
         <table class="admin-report-list__table">

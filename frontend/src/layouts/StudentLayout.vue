@@ -89,11 +89,9 @@ async function handleLogout(): Promise<void> {
           aria-hidden="true"
         >
           {{ initial }}
-          <span class="student-layout__avatar-dot" />
         </span>
         <div class="student-layout__user-meta">
           <strong>{{ auth.me?.real_name || "未登录" }}</strong>
-          <small>学生 · 在校</small>
         </div>
         <button
           type="button"
@@ -114,8 +112,6 @@ async function handleLogout(): Promise<void> {
     </main>
     <footer class="student-layout__foot">
       <span>© 南开大学 · 校园电信诈骗上报与预警平台</span>
-      <span class="student-layout__foot-divider">·</span>
-      <span>反诈，是我们一起做的事</span>
     </footer>
   </div>
 </template>

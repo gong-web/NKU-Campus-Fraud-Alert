@@ -50,7 +50,6 @@ onMounted(load);
 <template>
   <div class="my-reports">
     <AppPageHeader
-      badge="UC-02"
       title="我的上报记录"
       :subtitle="`共 ${total} 条上报`"
     />
