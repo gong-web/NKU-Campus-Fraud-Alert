@@ -206,16 +206,18 @@ async def admin_quiz_report_export(
     current: Annotated[UserSnapshot, Depends(require_permission(perm.QUIZ_ASSIGN))],
 ) -> StreamingResponse:
     from io import BytesIO
-    from urllib.parse import quote
+
+    from app.api.response_headers import content_disposition
 
     data, filename = await export_completion_report_xlsx(quiz_id, current=current)
-    ascii_fallback = filename.encode("ascii", "ignore").decode("ascii") or f"quiz_report_{quiz_id}.xlsx"
-    disposition = (
-        f'attachment; filename="{ascii_fallback}"; '
-        f"filename*=UTF-8''{quote(filename)}"
-    )
     return StreamingResponse(
         BytesIO(data),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": disposition},
+        headers={
+            "Content-Disposition": content_disposition(
+                filename,
+                disposition="attachment",
+                fallback_filename=f"quiz_report_{quiz_id}.xlsx",
+            )
+        },
     )

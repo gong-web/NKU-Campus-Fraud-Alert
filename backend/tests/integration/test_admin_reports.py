@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from sqlalchemy import select
 from httpx import AsyncClient
+from sqlalchemy import select
 
 from app.infra.cache.rbac_cache import RBACCache
 from app.infra.db.models import (
@@ -142,7 +142,7 @@ async def seed_admin_module(db_session, tmp_path, monkeypatch):
             file_id=7301,
             case_id=case.case_id,
             draft_id=None,
-            original_name="proof.png",
+            original_name="付款凭证.png",
             file_size=18,
             mime_type="image/png",
             storage_path=storage_path,
@@ -198,6 +198,10 @@ async def test_admin_evidence_requires_confirmation_header(client: AsyncClient, 
     )
     assert ok.status_code == 200, ok.text
     assert ok.content == b"fake-image-content"
+    assert ok.headers["content-disposition"].startswith(
+        "inline; filename=\"evidence\"; filename*=UTF-8''"
+    )
+    assert "%E4%BB%98%E6%AC%BE%E5%87%AD%E8%AF%81.png" in ok.headers["content-disposition"]
 
 
 @pytest.mark.asyncio

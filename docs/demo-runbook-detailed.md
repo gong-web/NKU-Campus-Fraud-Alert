@@ -742,6 +742,33 @@ docker compose exec -T backend python -m app.infra.db.seed
 - 文件名使用简单中文或英文，不使用过长文件名。
 - 正式答辩前先上传一次，确认预览和提交都正常。
 
+#### 点击提交后出现 `Network Error`
+
+如果证据已经上传，点击提交时却出现 `Network Error`，先不要连续重复点击。旧版后端在读取中文文件名的证据时，会把中文名称直接写入 HTTP 响应头，触发 Latin-1 编码异常并返回 500；浏览器有时只把它显示成笼统的 `Network Error`。当前版本已改为 RFC 5987 UTF-8 文件名编码，中文文件名可以正常预览和提交。
+
+现场排查步骤：
+
+1. 先打开“我的上报”，检查是否已经生成案件编号；提交请求可能已经成功，只是随后的证据预览请求失败。
+2. 查看后端日志：
+
+```powershell
+docker compose logs backend --tail 100
+```
+
+3. 如果日志含有 `UnicodeEncodeError`、`latin-1` 和 `Content-Disposition`，说明运行的还是旧版代码。更新代码并重启后端：
+
+```powershell
+git pull
+docker compose up -d --build backend
+```
+
+4. 来不及更新时，可临时把证据文件改成纯英文名，例如 `evidence-01.png`，删除旧证据后重新上传。
+5. 如果“我的上报”里已经有案件编号，不要再次提交，避免产生重复案件。
+
+本次故障的判断口诀可以这样介绍：
+
+“看到 `Network Error` 不等于案件一定没提交。先查我的上报是否已有案件编号，再看后端日志；这样既能定位中文文件名兼容问题，也能避免重复上报。”
+
 ### 12.6 点击“保存草稿”后看不到草稿
 
 处理：

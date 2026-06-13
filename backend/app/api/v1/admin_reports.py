@@ -8,6 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Query, Response
 
 from app.api.deps import require_permission, require_role
+from app.api.response_headers import content_disposition
 from app.domain.user_snapshot import UserSnapshot
 from app.schemas.common import PaginationOut
 from app.schemas.reports import (
@@ -131,7 +132,12 @@ async def admin_evidence_content(
     return Response(
         content=base64.b64decode(access.content_base64),
         media_type=access.mime_type,
-        headers={"Content-Disposition": f'inline; filename="{access.original_name}"'},
+        headers={
+            "Content-Disposition": content_disposition(
+                access.original_name,
+                fallback_filename="evidence",
+            )
+        },
     )
 
 

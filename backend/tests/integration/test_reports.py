@@ -299,7 +299,7 @@ class TestDraftCRUD:
 
         upload = await client.post(
             f"/api/v1/drafts/{draft_id}/evidence",
-            files={"file": ("proof.png", b"fake-image-content", "image/png")},
+            files={"file": ("诈骗聊天记录.png", b"fake-image-content", "image/png")},
         )
         assert upload.status_code == 201, upload.text
         file_id = upload.json()["file_id"]
@@ -314,3 +314,10 @@ class TestDraftCRUD:
         content = await client.get(f"/api/v1/drafts/{draft_id}/evidence/{file_id}")
         assert content.status_code == 200, content.text
         assert content.content == b"fake-image-content"
+        assert content.headers["content-disposition"].startswith(
+            "inline; filename=\"evidence\"; filename*=UTF-8''"
+        )
+        assert (
+            "%E8%AF%88%E9%AA%97%E8%81%8A%E5%A4%A9%E8%AE%B0%E5%BD%95.png"
+            in content.headers["content-disposition"]
+        )

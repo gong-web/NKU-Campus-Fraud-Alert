@@ -8,6 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, Response, UploadFile
 
 from app.api.deps import require_permission
+from app.api.response_headers import content_disposition
 from app.domain.user_snapshot import UserSnapshot
 from app.schemas.reports import DraftOut, DraftSaveIn, EvidenceFileOut
 from app.services import permissions as perm
@@ -121,5 +122,10 @@ async def get_draft_evidence(
     return Response(
         content=base64.b64decode(access.content_base64),
         media_type=access.mime_type,
-        headers={"Content-Disposition": f'inline; filename="{access.original_name}"'},
+        headers={
+            "Content-Disposition": content_disposition(
+                access.original_name,
+                fallback_filename="evidence",
+            )
+        },
     )
